@@ -1,0 +1,19 @@
+{
+  "properties": [
+    {
+      "name": "app.frontend.redirect-uri",
+      "type": "java.lang.String",
+      "description": "Frontend URL used for OAuth2 success redirection."
+    },
+    {
+      "name": "app.jwt.secret",
+      "type": "java.lang.String",
+      "description": "Secret key used to sign JWT tokens."
+    },
+    {
+      "name": "app.jwt.expiration-ms",
+      "type": "java.lang.Long",
+      "description": "JWT expiration duration in milliseconds."
+    }
+  ]
+}
