@@ -3,12 +3,24 @@ import ProtectedRoute from "../components/ProtectedRoute";
 import { useAuth } from "../context/AuthContext";
 import AdminDashboard from "../pages/AdminDashboard";
 import AuthCallbackPage from "../pages/AuthCallbackPage";
-import LecturerDashboard from "../pages/LecturerDashboard";
 import LoginPage from "../pages/LoginPage";
 import RoleSelectionPage from "../pages/RoleSelectionPage";
-import StudentDashboard from "../pages/StudentDashboard";
-import TechnicianDashboard from "../pages/TechnicianDashboard";
 import UnauthorizedPage from "../pages/UnauthorizedPage";
+import Userbookings from "../pages/Userbookings";
+import UserHome from "../pages/UserHome";
+import UserLayout from "../pages/UserLayout";
+import AdminLayout from "../pages/AdminLayout";
+import UserNotifications from "../pages/UserNotifications";
+import UserResources from "../pages/UserResources";
+import UserTickets from "../pages/UserTickets";
+import AdminBookings from "../pages/AdminBookings";
+import AdminResources from "../pages/AdminResources";
+import AdminTicket from "../pages/AdminTicket";
+import AdminNotification from "../pages/AdminNotification";
+import TechnicianLayout from "../pages/TechnianLayout";
+import TechnicianNavbar from "../components/TechnicianNavbar";
+import TechnianTickets from "../pages/TechnianTickets";
+import TechnianNotification from "../pages/TechnianNotification";
 
 function RootRedirect() {
   const { user, token } = useAuth();
@@ -37,37 +49,61 @@ export default function AppRouter() {
         path="/admin"
         element={
           <ProtectedRoute allowedRoles={["ADMIN"]}>
-            <AdminDashboard />
+            <AdminLayout />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<AdminDashboard />} />
+        <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="resources" element={<AdminResources />} />
+        <Route path="bookings" element={<AdminBookings />} />
+        <Route path="tickets" element={<AdminTicket />} />
+        <Route path="notifications" element={<AdminNotification />} />
+      </Route>
 
       <Route
         path="/student"
         element={
-          <ProtectedRoute allowedRoles={["STUDENT"]}>
-            <StudentDashboard />
+          <ProtectedRoute allowedRoles={["STUDENT", "LECTURER"]}>
+            <UserLayout />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<UserHome />} />
+        <Route path="resources" element={<UserResources />} />
+        <Route path="bookings" element={<Userbookings />} />
+        <Route path="tickets" element={<UserTickets />} />
+        <Route path="notifications" element={<UserNotifications />} />
+      </Route>
 
       <Route
         path="/lecturer"
         element={
-          <ProtectedRoute allowedRoles={["LECTURER"]}>
-            <LecturerDashboard />
+          <ProtectedRoute allowedRoles={["STUDENT", "LECTURER"]}>
+            <UserLayout />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<UserHome />} />
+        <Route path="resources" element={<UserResources />} />
+        <Route path="bookings" element={<Userbookings />} />
+        <Route path="tickets" element={<UserTickets />} />
+        <Route path="notifications" element={<UserNotifications />} />
+      </Route>
 
       <Route
         path="/technician"
         element={
           <ProtectedRoute allowedRoles={["TECHNICIAN"]}>
-            <TechnicianDashboard />
+            <TechnicianLayout />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<TechnianTickets />} />
+        <Route path="tickets" element={<TechnianTickets />} />
+        <Route path="resources" element={<UserResources />} />
+        <Route path="notifications" element={<TechnianNotification />} />
+      </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

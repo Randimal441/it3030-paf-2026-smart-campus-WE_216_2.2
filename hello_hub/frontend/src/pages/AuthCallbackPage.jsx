@@ -10,6 +10,7 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     const completeLogin = async () => {
       const token = params.get("token");
+      console.log("JWT Token: ", token);
 
       if (!token) {
         navigate("/login", { replace: true });

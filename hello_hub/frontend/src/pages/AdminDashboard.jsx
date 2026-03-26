@@ -1,5 +1,4 @@
 import api from "../api/axiosClient";
-import DashboardLayout from "./DashboardLayout";
 
 export default function AdminDashboard() {
   const loadUsers = async () => {
@@ -8,19 +7,11 @@ export default function AdminDashboard() {
   };
 
   return (
-    <DashboardLayout
-      title="System Administration"
-      subtitle="Manage campus users, roles, and operational visibility."
-    >
-      <div className="panel-grid">
-        <article className="glass-card">
-          <h3>Manage users</h3>
-          <p>Fetch current user registry from the backend.</p>
-          <button className="cta-btn" onClick={loadUsers}>
-            Load Users
-          </button>
-        </article>
-      </div>
-    </DashboardLayout>
+    <div>
+      <h1>Admin Dashboard</h1>
+      <p>Welcome to the admin dashboard! Here you can manage resources, bookings, and tickets.</p>
+      <button className="cta-btn" onClick={loadUsers}>Load Users</button>
+    
+    </div>
   );
 }
