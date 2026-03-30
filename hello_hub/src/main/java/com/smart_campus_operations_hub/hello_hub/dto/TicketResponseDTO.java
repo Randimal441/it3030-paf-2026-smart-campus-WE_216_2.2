@@ -21,5 +21,7 @@ public class TicketResponseDTO {
     private List<String> imageUrls;
     private String assignedTechnicianEmail;
     private String assignedTechnicianName;
+    private String rejectionReason;
+    private String resolutionNote;
 
 }

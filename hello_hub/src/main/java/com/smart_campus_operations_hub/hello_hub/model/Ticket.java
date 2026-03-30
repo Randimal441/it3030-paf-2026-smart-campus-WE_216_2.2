@@ -38,6 +38,10 @@ public class Ticket {
     private String assignedTechnicianEmail;
     private String assignedTechnicianName;
 
+    private String rejectionReason;
+
+    private String resolutionNote;
+
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
         this.status = "OPEN";

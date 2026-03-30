@@ -19,4 +19,12 @@ public interface TicketServise {
     List<TicketResponseDTO> getTicketsForTechnician(String technicianEmail);
 
     List<TicketResponseDTO> getTicketsForUser(String email);
+
+    TicketResponseDTO getTicketById(String ticketId, String email);
+
+    Ticket rejectTicket(String ticketId, String adminEmail, String reason);
+
+    Ticket resolveTicket(String ticketId, String technicianEmail, String note);
+
+    Ticket closeTicket(String ticketId, String adminEmail);
 }

@@ -2,7 +2,9 @@ package com.smart_campus_operations_hub.hello_hub.controller;
 
 import com.smart_campus_operations_hub.hello_hub.dto.TechnicianDTO;
 import com.smart_campus_operations_hub.hello_hub.dto.TicketAssignDTO;
+import com.smart_campus_operations_hub.hello_hub.dto.TicketRejectDTO;
 import com.smart_campus_operations_hub.hello_hub.dto.TicketRequestDTO;
+import com.smart_campus_operations_hub.hello_hub.dto.TicketResolutionDTO;
 import com.smart_campus_operations_hub.hello_hub.dto.TicketResponseDTO;
 import com.smart_campus_operations_hub.hello_hub.model.Ticket;
 import com.smart_campus_operations_hub.hello_hub.service.TicketServise;
@@ -41,6 +43,35 @@ public class TicketController {
             adminEmail
     );
     }
+
+    @PostMapping("/reject/{ticketId}")
+    public Ticket rejectTicket(@PathVariable String ticketId,
+                           @RequestBody TicketRejectDTO dto,
+                           Authentication authentication) {
+
+    String adminEmail = authentication.getName();
+
+    return ticketService.rejectTicket(
+            ticketId,
+            adminEmail,
+            dto.getReason()
+    );
+    }
+
+    @PostMapping("/resolve/{ticketId}")
+    public Ticket resolveTicket(@PathVariable String ticketId,
+                            @RequestBody TicketResolutionDTO dto,
+                            Authentication authentication) {
+
+    String technicianEmail = authentication.getName();
+
+    return ticketService.resolveTicket(
+            ticketId,
+            technicianEmail,
+            dto.getResolutionNote()
+    );
+    }
+
     
     @GetMapping("/admin")
     public List<TicketResponseDTO> getAllTicketsForAdmin(Authentication authentication) {
@@ -54,7 +85,8 @@ public class TicketController {
     }
 
     @GetMapping("/technician/tickets")
-    public List<TicketResponseDTO> getTicketsForTechnician(@RequestParam String email) {
+    public List<TicketResponseDTO> getTicketsForTechnician(Authentication authentication) {
+    String email = authentication.getName();
     return ticketService.getTicketsForTechnician(email);
     }
 
@@ -63,4 +95,23 @@ public class TicketController {
     String email = authentication.getName();
     return ticketService.getTicketsForUser(email);
 }
+
+    @GetMapping("oneticketdetail/{ticketId}")
+    public TicketResponseDTO getTicketById(@PathVariable String ticketId,Authentication authentication) {
+    String email = authentication.getName();
+    return ticketService.getTicketById(ticketId, email);
+    }
+
+
+    @PatchMapping("/close/{ticketId}")
+    public Ticket closeTicket(@PathVariable String ticketId,
+                          Authentication authentication) {
+
+    String adminEmail = authentication.getName();
+
+    return ticketService.closeTicket(ticketId, adminEmail);
+    }
+    
+
+
 }

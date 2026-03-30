@@ -83,6 +83,8 @@ public class TicketServiceImpl implements TicketServise {
         dto.setImageUrls(ticket.getImageUrls());
         dto.setAssignedTechnicianEmail(ticket.getAssignedTechnicianEmail());
         dto.setAssignedTechnicianName(ticket.getAssignedTechnicianName());
+        dto.setRejectionReason(ticket.getRejectionReason());
+        dto.setResolutionNote(ticket.getResolutionNote());
         return dto;
     }).toList();
 }
@@ -150,6 +152,8 @@ public class TicketServiceImpl implements TicketServise {
                 dto.setImageUrls(ticket.getImageUrls());
                 dto.setAssignedTechnicianEmail(ticket.getAssignedTechnicianEmail());
                 dto.setAssignedTechnicianName(ticket.getAssignedTechnicianName());
+                dto.setRejectionReason(ticket.getRejectionReason());
+                dto.setResolutionNote(ticket.getResolutionNote());
                 return dto;
             }).toList();
     }
@@ -182,7 +186,115 @@ public class TicketServiceImpl implements TicketServise {
                 dto.setImageUrls(ticket.getImageUrls());
                 dto.setAssignedTechnicianEmail(ticket.getAssignedTechnicianEmail());
                 dto.setAssignedTechnicianName(ticket.getAssignedTechnicianName());
+                dto.setRejectionReason(ticket.getRejectionReason());
+                dto.setResolutionNote(ticket.getResolutionNote());
                 return dto;
             }).toList();
-}
+    }
+
+    @Override
+    public Ticket rejectTicket(String ticketId, String adminEmail, String reason) {
+    // Get admin
+    AppUser admin = userService.getByEmail(adminEmail);
+    if (admin.getRole() != UserRole.ADMIN) {
+        throw new RuntimeException("Only admin can reject tickets");
+    }
+
+    // Find the ticket
+    Ticket ticket = ticketRepository.findById(ticketId)
+            .orElseThrow(() -> new RuntimeException("Ticket not found"));
+
+    // Set status and rejection reason
+    ticket.setStatus("REJECTED");
+    ticket.setRejectionReason(reason);
+
+    return ticketRepository.save(ticket);
+    }
+
+
+    @Override
+    public TicketResponseDTO getTicketById(String ticketId, String email) {
+
+    AppUser user = userService.getByEmail(email);
+
+    Ticket ticket = ticketRepository.findById(ticketId)
+            .orElseThrow(() -> new RuntimeException("Ticket not found"));
+
+    boolean isAdmin = user.getRole() == UserRole.ADMIN;
+    boolean isCreator = email.equals(ticket.getCreatedByEmail());
+    boolean isAssignedTechnician = email.equals(ticket.getAssignedTechnicianEmail());
+
+    if (!(isAdmin || isCreator || isAssignedTechnician)) {
+        throw new RuntimeException("You are not allowed to view this ticket");
+    }
+
+    TicketResponseDTO dto = new TicketResponseDTO();
+    dto.setId(ticket.getId());
+    dto.setTitle(ticket.getTitle());
+    dto.setDescription(ticket.getDescription());
+    dto.setCategory(ticket.getCategory());
+    dto.setPriority(ticket.getPriority());
+    dto.setStatus(ticket.getStatus());
+    dto.setLocation(ticket.getLocation());
+    dto.setContact(ticket.getContact());
+    dto.setRole(ticket.getRole());
+    dto.setCreatedByName(ticket.getCreatedByName());
+    dto.setCreatedByEmail(ticket.getCreatedByEmail());
+    dto.setCreatedAt(ticket.getCreatedAt());
+    dto.setImageUrls(ticket.getImageUrls());
+    dto.setAssignedTechnicianEmail(ticket.getAssignedTechnicianEmail());
+    dto.setAssignedTechnicianName(ticket.getAssignedTechnicianName());
+    dto.setRejectionReason(ticket.getRejectionReason());
+    dto.setResolutionNote(ticket.getResolutionNote());
+
+    return dto;
+    }
+
+    @Override
+    public Ticket resolveTicket(String ticketId, String technicianEmail, String note) {
+
+    AppUser technician = userService.getByEmail(technicianEmail);
+
+    if (technician.getRole() != UserRole.TECHNICIAN) {
+        throw new RuntimeException("Only technicians can resolve tickets");
+    }
+
+    Ticket ticket = ticketRepository.findById(ticketId)
+            .orElseThrow(() -> new RuntimeException("Ticket not found"));
+
+    if (!technicianEmail.equals(ticket.getAssignedTechnicianEmail())) {
+        throw new RuntimeException("You are not assigned to this ticket");
+    }
+
+    ticket.setStatus("RESOLVED");
+    ticket.setResolutionNote(note);
+
+    return ticketRepository.save(ticket);
+    }
+
+    
+
+    @Override
+    public Ticket closeTicket(String ticketId, String adminEmail) {
+
+    // Check admin
+    AppUser admin = userService.getByEmail(adminEmail);
+    if (admin.getRole() != UserRole.ADMIN) {
+        throw new RuntimeException("Only admin can close tickets");
+    }
+
+    // Get ticket
+    Ticket ticket = ticketRepository.findById(ticketId)
+            .orElseThrow(() -> new RuntimeException("Ticket not found"));
+
+    // Check if already resolved
+    if (!"RESOLVED".equals(ticket.getStatus())) {
+        throw new RuntimeException("Only RESOLVED tickets can be closed");
+    }
+
+    // Update status
+    ticket.setStatus("CLOSED");
+
+    return ticketRepository.save(ticket);
+    }
 }
