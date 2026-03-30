@@ -94,7 +94,7 @@ public class TicketController {
     public List<TicketResponseDTO> getMyTickets(Authentication authentication) {
     String email = authentication.getName();
     return ticketService.getTicketsForUser(email);
-}
+    }
 
     @GetMapping("oneticketdetail/{ticketId}")
     public TicketResponseDTO getTicketById(@PathVariable String ticketId,Authentication authentication) {
