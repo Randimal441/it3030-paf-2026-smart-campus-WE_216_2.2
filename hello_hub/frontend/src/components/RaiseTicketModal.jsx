@@ -118,23 +118,34 @@ export default function RaiseTicketModal({ isOpen, onClose, onTicketCreated }) {
     setSubmitting(true);
 
     try {
-      const formDataToSend = new FormData();
-      formDataToSend.append("title", formData.title.trim());
-      formDataToSend.append("description", formData.description.trim());
-      formDataToSend.append("category", formData.category);
-      formDataToSend.append("priority", formData.priority);
-      formDataToSend.append("location", formData.location.trim());
-      formDataToSend.append("contact", formData.contact.trim());
+      let imageUrls = [];
 
-      uploadedImageFiles.forEach((file) => {
-        formDataToSend.append("images", file);
-      });
+      if (uploadedImageFiles.length > 0) {
+        const uploadFormData = new FormData();
+        uploadedImageFiles.forEach((file) => {
+          uploadFormData.append("files", file);
+        });
 
-      const response = await api.post("/api/tickets", formDataToSend, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+        const uploadResponse = await api.post("/api/tickets/upload-images", uploadFormData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+
+        imageUrls = uploadResponse?.data?.imageUrls || [];
+      }
+
+      const payload = {
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        category: formData.category,
+        priority: formData.priority,
+        location: formData.location.trim(),
+        contact: formData.contact.trim(),
+        imageUrls,
+      };
+
+      const response = await api.post("/api/tickets", payload);
 
       if (response.data) {
         setFormData({
