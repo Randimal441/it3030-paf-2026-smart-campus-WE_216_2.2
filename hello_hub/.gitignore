@@ -39,5 +39,4 @@ frontend/.env
 
 ### OS Files ###
 .DS_Store
-**/ .DS_Store
-
+**/.DS_Store
