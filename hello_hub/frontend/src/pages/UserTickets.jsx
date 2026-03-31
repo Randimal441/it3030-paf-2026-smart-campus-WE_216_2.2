@@ -8,6 +8,9 @@ export default function UserTickets() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [selectedTicketForDetails, setSelectedTicketForDetails] = useState(null);
+  const [previewImageUrl, setPreviewImageUrl] = useState("");
 
   const filterLabels = ["All", "Open", "In Progress", "Resolved", "Closed", "Reject"];
 
@@ -93,6 +96,12 @@ export default function UserTickets() {
       category: ticket?.category || "General",
       location: ticket?.location || "Not specified",
       priority: toTitleCase((ticket?.priority || "Normal").replace(/_/g, " ")),
+      contact: ticket?.contact || "Not provided",
+      assignedTechnicianName: ticket?.assignedTechnicianName || "",
+      assignedTechnicianEmail: ticket?.assignedTechnicianEmail || "",
+      rejectionReason: ticket?.rejectionReason || "",
+      resolutionNote: ticket?.resolutionNote || "",
+      imageUrls: Array.isArray(ticket?.imageUrls) ? ticket.imageUrls : [],
     };
   };
 
@@ -139,6 +148,17 @@ export default function UserTickets() {
   const handleTicketCreated = useCallback(() => {
     fetchMyTickets();
   }, [fetchMyTickets]);
+
+  const openDetailsModal = useCallback((ticket) => {
+    setSelectedTicketForDetails(ticket);
+    setIsDetailsModalOpen(true);
+  }, []);
+
+  const closeDetailsModal = useCallback(() => {
+    setIsDetailsModalOpen(false);
+    setSelectedTicketForDetails(null);
+    setPreviewImageUrl("");
+  }, []);
 
   return (
     <div className="tickets-page">
@@ -198,7 +218,19 @@ export default function UserTickets() {
             )}
 
             {!loading && !error && filteredTickets.map((ticket) => (
-              <article key={ticket.id} className="ticket-card">
+              <article
+                key={ticket.id}
+                className="ticket-card"
+                role="button"
+                tabIndex={0}
+                onClick={() => openDetailsModal(ticket)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    openDetailsModal(ticket);
+                  }
+                }}
+              >
                 <div className="ticket-top-row">
                   <span className="ticket-id">#{ticket.id}</span>
                   <span className={`ticket-status ${ticket.statusClass}`}>{ticket.status}</span>
@@ -238,6 +270,158 @@ export default function UserTickets() {
         onClose={() => setIsModalOpen(false)}
         onTicketCreated={handleTicketCreated}
       />
+
+      {isDetailsModalOpen && selectedTicketForDetails && (
+        <>
+          <div className="modal-overlay" onClick={closeDetailsModal} role="presentation"></div>
+          <div className="modal-container" role="dialog" aria-modal="true" aria-labelledby="user-ticket-details-modal-title">
+            <div className="modal-header">
+              <h2 id="user-ticket-details-modal-title">Ticket Details</h2>
+              <button
+                type="button"
+                className="modal-close-btn"
+                onClick={closeDetailsModal}
+                aria-label="Close ticket details modal"
+              >
+                x
+              </button>
+            </div>
+
+            <div className="raise-ticket-form">
+              <div className="form-group">
+                <label>Ticket ID</label>
+                <input value={selectedTicketForDetails.id} disabled />
+              </div>
+
+              <div className="form-group">
+                <label>Title</label>
+                <input value={selectedTicketForDetails.title} disabled />
+              </div>
+
+              <div className="form-group">
+                <label>Description</label>
+                <textarea value={selectedTicketForDetails.description} rows="4" disabled />
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Status</label>
+                  <input value={selectedTicketForDetails.status} disabled />
+                </div>
+                <div className="form-group">
+                  <label>Created Date</label>
+                  <input value={selectedTicketForDetails.date} disabled />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Category</label>
+                  <input value={selectedTicketForDetails.category} disabled />
+                </div>
+                <div className="form-group">
+                  <label>Priority</label>
+                  <input value={selectedTicketForDetails.priority} disabled />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Location</label>
+                  <input value={selectedTicketForDetails.location} disabled />
+                </div>
+                <div className="form-group">
+                  <label>Contact</label>
+                  <input value={selectedTicketForDetails.contact} disabled />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Assigned Technician</label>
+                <input
+                  value={
+                    selectedTicketForDetails.assignedTechnicianName
+                      ? `${selectedTicketForDetails.assignedTechnicianName} (${selectedTicketForDetails.assignedTechnicianEmail})`
+                      : "Unassigned"
+                  }
+                  disabled
+                />
+              </div>
+
+              {selectedTicketForDetails.rejectionReason && (
+                <div className="form-group">
+                  <label>Rejection Reason</label>
+                  <textarea value={selectedTicketForDetails.rejectionReason} rows="3" disabled />
+                </div>
+              )}
+
+              {selectedTicketForDetails.resolutionNote && (
+                <div className="form-group">
+                  <label>Resolution Note</label>
+                  <textarea value={selectedTicketForDetails.resolutionNote} rows="3" disabled />
+                </div>
+              )}
+
+              {selectedTicketForDetails.imageUrls.length > 0 && (
+                <div className="form-group">
+                  <label>Attached Images</label>
+                  <div className="image-preview-grid">
+                    {selectedTicketForDetails.imageUrls.map((imageUrl, index) => (
+                      <div key={`${selectedTicketForDetails.id}-img-${index}`} className="image-preview-item">
+                        <img
+                          src={imageUrl}
+                          alt={`Ticket attachment ${index + 1}`}
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => setPreviewImageUrl(imageUrl)}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter" || event.key === " ") {
+                              event.preventDefault();
+                              setPreviewImageUrl(imageUrl);
+                            }
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={closeDetailsModal}>
+                  Close
+                </button>
+              </div>
+            </div>
+
+            {previewImageUrl && (
+              <div
+                className="ticket-image-lightbox-overlay"
+                role="presentation"
+                onClick={() => setPreviewImageUrl("")}
+              >
+                <div
+                  className="ticket-image-lightbox"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label="Ticket image preview"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <button
+                    type="button"
+                    className="ticket-image-lightbox-close"
+                    onClick={() => setPreviewImageUrl("")}
+                    aria-label="Close image preview"
+                  >
+                    x
+                  </button>
+                  <img src={previewImageUrl} alt="Ticket attachment full preview" />
+                </div>
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
