@@ -35,4 +35,11 @@ build/
 ### Frontend ###
 frontend/node_modules/
 frontend/dist/
+
+### Environment files ###
+.env
+.env.*
 frontend/.env
+frontend/.env.*
+!.env.example
+!frontend/.env.example
