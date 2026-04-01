@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { deleteResource, getAllResources, searchResources } from "../api/resourceService";
 import ResourceForm from "./ResourceForm";
 import { useAuth } from "../context/AuthContext";
@@ -21,6 +22,7 @@ const getStatusStyles = (status) => {
 
 export default function ResourceList() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const canManageResources = user?.role === "ADMIN";
   const [resources, setResources] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -30,6 +32,7 @@ export default function ResourceList() {
   const [locationFilter, setLocationFilter] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingResourceId, setEditingResourceId] = useState(null);
+  const [selectedResource, setSelectedResource] = useState(null);
 
   useEffect(() => {
     loadResources();
@@ -40,13 +43,32 @@ export default function ResourceList() {
       setIsLoading(true);
       setError("");
       const response = await getAllResources();
-      setResources(response.data || []);
+      const results = response.data || [];
+      setResources(results);
+      // Auto-select first resource if available
+      if (results.length > 0) {
+        setSelectedResource(results[0]);
+      } else {
+        setSelectedResource(null);
+      }
     } catch (err) {
-      const message = err?.response?.data?.message || "Failed to load resources.";
+      const message = err?.response?.data?.message || "Failed to search resources.";
       setError(message);
+      setSelectedResource(null);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleGoToBooking = () => {
+    if (!selectedResource) {
+      alert("Please select a resource first");
+      return;
+    }
+    // Navigate to user bookings page with selected resource
+    const role = user?.role?.toLowerCase() || "student";
+    const path = role === "admin" ? "/admin/bookings" : `/${role}/bookings`;
+    navigate(path, { state: { selectedResource: selectedResource.id, resourceName: selectedResource.name } });
   };
 
   const handleEdit = (resource) => {
@@ -102,10 +124,18 @@ export default function ResourceList() {
       setIsLoading(true);
       setError("");
       const response = await searchResources(params);
-      setResources(response.data || []);
+      const results = response.data || [];
+      setResources(results);
+      // Auto-select first resource if available
+      if (results.length > 0) {
+        setSelectedResource(results[0]);
+      } else {
+        setSelectedResource(null);
+      }
     } catch (err) {
       const message = err?.response?.data?.message || "Failed to search resources.";
       setError(message);
+      setSelectedResource(null);
     } finally {
       setIsLoading(false);
     }
@@ -177,6 +207,12 @@ export default function ResourceList() {
             <button type="button" className="cta-btn secondary" onClick={loadResources}>
               Clear
             </button>
+
+            {!canManageResources && resources.length > 0 && selectedResource && (
+              <button type="button" className="cta-btn" onClick={handleGoToBooking}>
+                Go to Booking
+              </button>
+            )}
           </div>
 
           {isLoading && <p>Loading resources...</p>}
@@ -212,19 +248,31 @@ export default function ResourceList() {
                     </tr>
                   ) : (
                     resources.map((resource) => (
-                      <tr key={resource.id} style={{ borderBottom: "1px solid var(--outline)" }}>
+                      <tr
+                        key={resource.id}
+                        onClick={() => !canManageResources && setSelectedResource(resource)}
+                        style={{
+                          borderBottom: "1px solid var(--outline)",
+                          cursor: !canManageResources ? "pointer" : "default",
+                          backgroundColor: selectedResource?.id === resource.id ? "rgba(13, 110, 253, 0.1)" : "transparent",
+                          transition: "background-color 0.2s ease",
+                        }}
+                      >
                         <td style={{ padding: "12px" }}>{resource.name}</td>
                         <td style={{ padding: "12px" }}>{resource.type}</td>
                         <td style={{ padding: "12px" }}>{resource.capacity}</td>
                         <td style={{ padding: "12px" }}>{resource.location}</td>
                         <td style={{ padding: "12px" }}>
                           <span
+                            className={resource.status === "ACTIVE" ? "status-badge-active" : "status-badge-inactive"}
                             style={{
                               ...getStatusStyles(resource.status),
-                              padding: "4px 8px",
-                              borderRadius: "6px",
-                              fontSize: "12px",
+                              padding: "6px 12px",
+                              borderRadius: "8px",
+                              fontSize: "13px",
                               fontWeight: "700",
+                              display: "inline-block",
+                              transition: "all 0.3s ease",
                             }}
                           >
                             {resource.status}

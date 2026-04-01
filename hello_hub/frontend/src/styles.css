@@ -468,6 +468,41 @@ body {
   }
 }
 
+@keyframes statusPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(30, 126, 52, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(30, 126, 52, 0);
+  }
+}
+
+@keyframes statusPulseInactive {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(217, 48, 37, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(217, 48, 37, 0);
+  }
+}
+
+@keyframes statusFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+.status-badge-active {
+  animation: statusPulse 2s infinite, statusFloat 3s ease-in-out infinite;
+}
+
+.status-badge-inactive {
+  animation: statusPulseInactive 2s infinite, statusFloat 3s ease-in-out infinite;
+}
+
 .card-wide {
   max-width: 820px;
 }
