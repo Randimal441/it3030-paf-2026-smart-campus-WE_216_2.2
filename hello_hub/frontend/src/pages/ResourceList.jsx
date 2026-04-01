@@ -142,27 +142,39 @@ export default function ResourceList() {
   };
 
   return (
-    <div className="page mesh-bg">
-      <div className="dashboard-shell">
-        <div className="dashboard-header">
-          <div>
-            <h1>Campus Resources</h1>
-            <p>View, filter, and manage resources across the campus.</p>
-          </div>
-          {canManageResources && (
-            <button type="button" className="cta-btn" onClick={handleAdd}>
-              + Add Resource
+    <div className="tickets-page">
+      <section className="tickets-hero">
+        <div className="tickets-hero-overlay"></div>
+        <div className="tickets-hero-content">
+          <h1>Campus Resources</h1>
+          <p>
+            Explore available campus facilities, filter by your needs, and continue to the booking
+            flow quickly.
+          </p>
+        </div>
+      </section>
+
+      <section className="tickets-content">
+        <aside className="tickets-sidebar" aria-label="Resource filters">
+          {canManageResources ? (
+            <button type="button" className="raise-ticket-btn" onClick={handleAdd}>
+              <span aria-hidden="true">+</span>
+              Add Resource
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="raise-ticket-btn"
+              onClick={handleGoToBooking}
+              disabled={!selectedResource}
+            >
+              <span aria-hidden="true">&#8594;</span>
+              Go to Booking
             </button>
           )}
-        </div>
 
-        <div className="glass-card" style={{ width: "100%", marginTop: "20px" }}>
-          <div style={{ display: "flex", gap: "10px", marginBottom: "14px", flexWrap: "wrap" }}>
-            <select
-              className="role-chip"
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-            >
+          <div className="tickets-filter-list" role="group" aria-label="Filters">
+            <select className="resource-filter-input" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
               <option value="">All Types</option>
               {RESOURCE_TYPES.map((type) => (
                 <option key={type} value={type}>
@@ -172,116 +184,99 @@ export default function ResourceList() {
             </select>
 
             <input
+              className="resource-filter-input"
               type="number"
               min="1"
               placeholder="Minimum Capacity"
               value={capacityFilter}
               onChange={(e) => setCapacityFilter(e.target.value)}
-              style={{
-                minWidth: "180px",
-                padding: "10px 12px",
-                borderRadius: "10px",
-                border: "1px solid var(--outline)",
-                background: "#f8fbff",
-              }}
             />
 
             <input
+              className="resource-filter-input"
               type="text"
               placeholder="Location"
               value={locationFilter}
               onChange={(e) => setLocationFilter(e.target.value)}
-              style={{
-                minWidth: "180px",
-                padding: "10px 12px",
-                borderRadius: "10px",
-                border: "1px solid var(--outline)",
-                background: "#f8fbff",
-              }}
             />
 
-            <button type="button" className="cta-btn" onClick={handleSearch}>
-              Search
+            <button type="button" className="ticket-filter-btn active" onClick={handleSearch}>
+              <span>Search</span>
             </button>
-
-            <button type="button" className="cta-btn secondary" onClick={loadResources}>
-              Clear
+            <button type="button" className="ticket-filter-btn" onClick={loadResources}>
+              <span>Clear</span>
             </button>
-
-            {!canManageResources && resources.length > 0 && selectedResource && (
-              <button type="button" className="cta-btn" onClick={handleGoToBooking}>
-                Go to Booking
-              </button>
-            )}
           </div>
+        </aside>
 
-          {isLoading && <p>Loading resources...</p>}
+        <div className="tickets-main">
+          <header className="tickets-main-header">
+            <div>
+              <h2>Resource Catalogue</h2>
+              <span>{isLoading ? "Loading..." : `${resources.length} shown`}</span>
+            </div>
+          </header>
+
+          {isLoading && <div className="ticket-empty-state">Loading resources...</div>}
 
           {error && (
-            <p role="alert" style={{ color: "#b91c1c" }}>
+            <div className="ticket-empty-state" role="alert">
               {error}
-            </p>
+            </div>
           )}
 
           {!isLoading && !error && (
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr style={{ textAlign: "left", borderBottom: "1px solid var(--outline)" }}>
-                    <th style={{ padding: "12px" }}>Name</th>
-                    <th style={{ padding: "12px" }}>Type</th>
-                    <th style={{ padding: "12px" }}>Capacity</th>
-                    <th style={{ padding: "12px" }}>Location</th>
-                    <th style={{ padding: "12px" }}>Status</th>
-                    {canManageResources && <th style={{ padding: "12px" }}>Actions</th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {resources.length === 0 ? (
+            <div className="ticket-card resources-table-card">
+              <div className="resources-table-wrap">
+                <table className="resources-table">
+                  <thead>
                     <tr>
-                      <td
-                        style={{ padding: "12px" }}
-                        colSpan={canManageResources ? 6 : 5}
-                      >
-                        No resources available.
-                      </td>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Capacity</th>
+                      <th>Location</th>
+                      <th>Status</th>
+                      {canManageResources && <th>Actions</th>}
                     </tr>
-                  ) : (
-                    resources.map((resource) => (
-                      <tr
-                        key={resource.id}
-                        onClick={() => !canManageResources && setSelectedResource(resource)}
-                        style={{
-                          borderBottom: "1px solid var(--outline)",
-                          cursor: !canManageResources ? "pointer" : "default",
-                          backgroundColor: selectedResource?.id === resource.id ? "rgba(13, 110, 253, 0.1)" : "transparent",
-                          transition: "background-color 0.2s ease",
-                        }}
-                      >
-                        <td style={{ padding: "12px" }}>{resource.name}</td>
-                        <td style={{ padding: "12px" }}>{resource.type}</td>
-                        <td style={{ padding: "12px" }}>{resource.capacity}</td>
-                        <td style={{ padding: "12px" }}>{resource.location}</td>
-                        <td style={{ padding: "12px" }}>
-                          <span
-                            className={resource.status === "ACTIVE" ? "status-badge-active" : "status-badge-inactive"}
-                            style={{
-                              ...getStatusStyles(resource.status),
-                              padding: "6px 12px",
-                              borderRadius: "8px",
-                              fontSize: "13px",
-                              fontWeight: "700",
-                              display: "inline-block",
-                              transition: "all 0.3s ease",
-                            }}
-                          >
-                            {resource.status}
-                          </span>
-                        </td>
-                        {canManageResources && (
-                          <td style={{ padding: "12px", whiteSpace: "nowrap" }}>
-                            {canManageResources && (
-                              <>
+                  </thead>
+                  <tbody>
+                    {resources.length === 0 ? (
+                      <tr>
+                        <td colSpan={canManageResources ? 6 : 5}>No resources available.</td>
+                      </tr>
+                    ) : (
+                      resources.map((resource) => (
+                        <tr
+                          key={resource.id}
+                          onClick={() => !canManageResources && setSelectedResource(resource)}
+                          className={selectedResource?.id === resource.id ? "selected" : ""}
+                        >
+                          <td>{resource.name}</td>
+                          <td>{resource.type}</td>
+                          <td>{resource.capacity}</td>
+                          <td>{resource.location}</td>
+                          <td>
+                            <span
+                              className={
+                                resource.status === "ACTIVE"
+                                  ? "status-badge-active"
+                                  : "status-badge-inactive"
+                              }
+                              style={{
+                                ...getStatusStyles(resource.status),
+                                padding: "6px 12px",
+                                borderRadius: "999px",
+                                fontSize: "12px",
+                                fontWeight: "700",
+                                display: "inline-block",
+                              }}
+                            >
+                              {resource.status}
+                            </span>
+                          </td>
+                          {canManageResources && (
+                            <td>
+                              <div className="resource-actions">
                                 <button type="button" className="user-nav-link" onClick={() => handleEdit(resource)}>
                                   Edit
                                 </button>
@@ -293,19 +288,19 @@ export default function ResourceList() {
                                 >
                                   Delete
                                 </button>
-                              </>
-                            )}
-                          </td>
-                        )}
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                              </div>
+                            </td>
+                          )}
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>
-      </div>
+      </section>
 
       {canManageResources && showForm && (
         <div
