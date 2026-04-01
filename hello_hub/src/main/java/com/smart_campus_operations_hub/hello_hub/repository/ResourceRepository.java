@@ -12,4 +12,16 @@ public interface ResourceRepository extends JpaRepository<Resource, Long> {
     List<Resource> findByLocationContainingIgnoreCase(String location);
 
     List<Resource> findByCapacityGreaterThanEqual(Integer capacity);
+
+    List<Resource> findByTypeAndLocationContainingIgnoreCase(ResourceType type, String location);
+
+    List<Resource> findByTypeAndCapacityGreaterThanEqual(ResourceType type, Integer capacity);
+
+    List<Resource> findByLocationContainingIgnoreCaseAndCapacityGreaterThanEqual(String location, Integer capacity);
+
+    List<Resource> findByTypeAndLocationContainingIgnoreCaseAndCapacityGreaterThanEqual(
+            ResourceType type,
+            String location,
+            Integer capacity
+    );
 }

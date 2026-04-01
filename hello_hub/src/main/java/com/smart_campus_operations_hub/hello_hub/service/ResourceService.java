@@ -4,6 +4,7 @@ import com.smart_campus_operations_hub.hello_hub.dto.ResourceRequestDTO;
 import com.smart_campus_operations_hub.hello_hub.dto.ResourceResponseDTO;
 import com.smart_campus_operations_hub.hello_hub.exception.ResourceNotFoundException;
 import com.smart_campus_operations_hub.hello_hub.model.Resource;
+import com.smart_campus_operations_hub.hello_hub.model.ResourceType;
 import com.smart_campus_operations_hub.hello_hub.repository.ResourceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -55,6 +56,40 @@ public class ResourceService {
             throw new ResourceNotFoundException("Resource not found with id: " + id);
         }
         resourceRepository.deleteById(id);
+    }
+
+    public List<ResourceResponseDTO> searchResources(ResourceType type, String location, Integer capacity) {
+        String normalizedLocation = (location == null || location.isBlank()) ? null : location.trim();
+
+        List<Resource> resources;
+        if (type != null && normalizedLocation != null && capacity != null) {
+            resources = resourceRepository.findByTypeAndLocationContainingIgnoreCaseAndCapacityGreaterThanEqual(
+                    type,
+                    normalizedLocation,
+                    capacity
+            );
+        } else if (type != null && normalizedLocation != null) {
+            resources = resourceRepository.findByTypeAndLocationContainingIgnoreCase(type, normalizedLocation);
+        } else if (type != null && capacity != null) {
+            resources = resourceRepository.findByTypeAndCapacityGreaterThanEqual(type, capacity);
+        } else if (normalizedLocation != null && capacity != null) {
+            resources = resourceRepository.findByLocationContainingIgnoreCaseAndCapacityGreaterThanEqual(
+                    normalizedLocation,
+                    capacity
+            );
+        } else if (type != null) {
+            resources = resourceRepository.findByType(type);
+        } else if (normalizedLocation != null) {
+            resources = resourceRepository.findByLocationContainingIgnoreCase(normalizedLocation);
+        } else if (capacity != null) {
+            resources = resourceRepository.findByCapacityGreaterThanEqual(capacity);
+        } else {
+            resources = resourceRepository.findAll();
+        }
+
+        return resources.stream()
+                .map(this::mapToResponseDTO)
+                .toList();
     }
 
     private Resource mapToEntity(ResourceRequestDTO dto) {
