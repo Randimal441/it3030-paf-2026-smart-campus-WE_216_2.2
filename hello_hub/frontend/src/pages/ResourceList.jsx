@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
-import { deleteResource, getAllResources } from "../api/resourceService";
+import { deleteResource, getAllResources, searchResources } from "../api/resourceService";
 
 export default function ResourceList() {
   const [resources, setResources] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
+  const [capacityFilter, setCapacityFilter] = useState("");
+  const [locationFilter, setLocationFilter] = useState("");
 
   useEffect(() => {
     loadResources();
@@ -44,9 +47,64 @@ export default function ResourceList() {
     }
   };
 
+  const handleSearch = async () => {
+    const params = {};
+
+    if (typeFilter) {
+      params.type = typeFilter;
+    }
+    if (locationFilter.trim()) {
+      params.location = locationFilter.trim();
+    }
+    if (capacityFilter !== "") {
+      params.capacity = Number(capacityFilter);
+    }
+
+    try {
+      setIsLoading(true);
+      setError("");
+      const response = await searchResources(params);
+      setResources(response.data || []);
+    } catch (err) {
+      const message = err?.response?.data?.message || "Failed to search resources.";
+      setError(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div>
       <h2>Campus Resources</h2>
+
+      <div style={{ display: "flex", gap: "8px", marginBottom: "12px", flexWrap: "wrap" }}>
+        <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
+          <option value="">All Types</option>
+          <option value="LECTURE_HALL">LECTURE_HALL</option>
+          <option value="LAB">LAB</option>
+          <option value="MEETING_ROOM">MEETING_ROOM</option>
+          <option value="EQUIPMENT">EQUIPMENT</option>
+        </select>
+
+        <input
+          type="number"
+          min="1"
+          placeholder="Minimum Capacity"
+          value={capacityFilter}
+          onChange={(e) => setCapacityFilter(e.target.value)}
+        />
+
+        <input
+          type="text"
+          placeholder="Location"
+          value={locationFilter}
+          onChange={(e) => setLocationFilter(e.target.value)}
+        />
+
+        <button type="button" onClick={handleSearch}>
+          Search
+        </button>
+      </div>
 
       {isLoading && <p>Loading resources...</p>}
 
