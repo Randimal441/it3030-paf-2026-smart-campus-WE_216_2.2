@@ -56,6 +56,387 @@ body {
   background-size: 28px 28px;
 }
 
+.login-scene-bg {
+  background: radial-gradient(circle at 50% -15%, #f7fbff 0%, #dfe9f8 66%, #d3e2f6 100%);
+}
+
+.role-scene-bg {
+  background: radial-gradient(circle at 52% -18%, #f8fbff 0%, #e2ebfa 64%, #d5e3f7 100%);
+}
+
+.login-split-card {
+  width: min(1120px, 100%);
+  min-height: 560px;
+  border-radius: 20px;
+  border: 1px solid rgba(142, 160, 194, 0.26);
+  background: linear-gradient(110deg, rgba(255, 255, 255, 0.95) 0%, rgba(245, 249, 255, 0.9) 58%, rgba(228, 238, 251, 0.9) 100%);
+  box-shadow: 0 26px 48px rgba(27, 53, 95, 0.16);
+  display: grid;
+  grid-template-columns: 1fr 0.96fr;
+  overflow: hidden;
+  animation: riseIn 0.55s ease;
+}
+
+.login-copy-column {
+  padding: clamp(38px, 5vw, 62px) clamp(22px, 4vw, 56px);
+  align-self: center;
+}
+
+.login-eyebrow {
+  margin: 0;
+  font-family: "Space Mono", monospace;
+  font-size: 0.83rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #6f7990;
+}
+
+.login-main-title {
+  margin: 18px 0 18px;
+  max-width: 560px;
+  font-size: clamp(2.05rem, 3.8vw, 4rem);
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  color: #1b2948;
+}
+
+.login-main-text {
+  margin: 0;
+  max-width: 500px;
+  font-size: clamp(1.02rem, 1.9vw, 1.18rem);
+  line-height: 1.45;
+  color: #55617c;
+}
+
+.google-signin-btn {
+  margin-top: 26px;
+  border: 0;
+  border-radius: 12px;
+  padding: 14px 28px;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, #3d71df 0%, #2f61d3 100%);
+  color: #f7fbff;
+  font-size: 1.1rem;
+  font-weight: 700;
+  box-shadow: 0 12px 20px rgba(52, 95, 192, 0.28);
+  cursor: pointer;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
+}
+
+.google-signin-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+  box-shadow: 0 14px 24px rgba(52, 95, 192, 0.32);
+}
+
+.google-signin-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #2f61d3;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-visual-column {
+  position: relative;
+  background: #e6eefb;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.login-visual-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center bottom;
+}
+
+.role-split-card {
+  width: min(1120px, 100%);
+  min-height: 560px;
+  border-radius: 20px;
+  border: 1px solid rgba(142, 160, 194, 0.26);
+  background: linear-gradient(
+    110deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(245, 249, 255, 0.9) 58%,
+    rgba(228, 238, 251, 0.9) 100%
+  );
+  box-shadow: 0 26px 48px rgba(27, 53, 95, 0.16);
+  display: grid;
+  grid-template-columns: 1fr 0.96fr;
+  overflow: hidden;
+  animation: riseIn 0.55s ease;
+}
+
+.role-copy-column {
+  padding: clamp(38px, 5vw, 62px) clamp(22px, 4vw, 56px);
+  align-self: center;
+}
+
+.role-main-title {
+  margin: 18px 0 18px;
+  max-width: 560px;
+  font-size: clamp(2.05rem, 3.8vw, 3.6rem);
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  color: #1b2948;
+}
+
+.role-main-text {
+  margin: 0;
+  max-width: 520px;
+  font-size: clamp(1rem, 1.8vw, 1.12rem);
+  line-height: 1.45;
+  color: #55617c;
+}
+
+.role-option-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 24px 0;
+}
+
+.role-option-btn {
+  border: 1px solid rgba(120, 143, 184, 0.35);
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fcfdff 0%, #f4f8ff 100%);
+  padding: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.role-option-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(84, 121, 187, 0.52);
+  box-shadow: 0 10px 18px rgba(77, 110, 170, 0.16);
+}
+
+.role-option-btn.active {
+  border-color: #2f61d3;
+  background: linear-gradient(180deg, #f2f7ff 0%, #e9f1ff 100%);
+  box-shadow: 0 10px 18px rgba(63, 102, 177, 0.18);
+}
+
+.role-option-title {
+  display: block;
+  color: #1b2948;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.role-option-subtitle {
+  display: block;
+  margin-top: 4px;
+  color: #5b6a86;
+  font-size: 0.85rem;
+}
+
+.role-continue-btn {
+  border: 0;
+  border-radius: 12px;
+  padding: 14px 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #3d71df 0%, #2f61d3 100%);
+  color: #f7fbff;
+  font-size: 1.05rem;
+  font-weight: 700;
+  box-shadow: 0 12px 20px rgba(52, 95, 192, 0.28);
+  cursor: pointer;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
+}
+
+.role-continue-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+  box-shadow: 0 14px 24px rgba(52, 95, 192, 0.32);
+}
+
+.role-continue-btn:disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 8px 14px rgba(52, 95, 192, 0.2);
+}
+
+.role-visual-column {
+  position: relative;
+  background: #e6eefb;
+  overflow: hidden;
+}
+
+.role-visual-glow {
+  position: absolute;
+  width: 76%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  right: 8%;
+  top: 8%;
+  background: radial-gradient(circle, rgba(188, 208, 241, 0.6) 0%, rgba(205, 220, 246, 0.06) 70%);
+  z-index: 1;
+}
+
+.role-visual-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center bottom;
+  opacity: 0.88;
+}
+
+.role-badge {
+  position: absolute;
+  z-index: 2;
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-family: "Space Mono", monospace;
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  color: #f8fbff;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 10px 20px rgba(32, 54, 95, 0.22);
+}
+
+.role-badge-student {
+  left: 10%;
+  top: 12%;
+  background: linear-gradient(140deg, rgba(47, 97, 211, 0.9) 0%, rgba(72, 128, 242, 0.84) 100%);
+}
+
+.role-badge-lecturer {
+  right: 10%;
+  top: 22%;
+  background: linear-gradient(140deg, rgba(0, 127, 121, 0.9) 0%, rgba(40, 166, 159, 0.85) 100%);
+}
+
+.role-badge-technician {
+  left: 14%;
+  bottom: 26%;
+  background: linear-gradient(140deg, rgba(244, 139, 63, 0.9) 0%, rgba(236, 174, 74, 0.84) 100%);
+}
+
+.role-badge-admin {
+  right: 12%;
+  bottom: 16%;
+  background: linear-gradient(140deg, rgba(92, 79, 184, 0.9) 0%, rgba(125, 104, 214, 0.84) 100%);
+}
+
+.campus-glow {
+  position: absolute;
+  width: 72%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  right: 12%;
+  top: 12%;
+  background: radial-gradient(circle, rgba(188, 208, 241, 0.55) 0%, rgba(205, 220, 246, 0.09) 70%);
+}
+
+.campus-building {
+  position: absolute;
+  bottom: 16%;
+  background: linear-gradient(180deg, #d9e6f9 0%, #c4d7f1 100%);
+  border: 1px solid rgba(163, 183, 216, 0.52);
+  border-radius: 6px;
+}
+
+.campus-building-main {
+  width: 42%;
+  height: 36%;
+  right: 18%;
+}
+
+.campus-building-side {
+  width: 30%;
+  height: 26%;
+  right: 56%;
+  bottom: 22%;
+}
+
+.campus-node {
+  position: absolute;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #6fb5ef 0%, #5ea4de 100%);
+  box-shadow: 0 6px 16px rgba(44, 94, 163, 0.22);
+}
+
+.campus-node-left {
+  width: 56px;
+  height: 56px;
+  left: 20%;
+  bottom: 18%;
+}
+
+.campus-node-mid {
+  width: 70px;
+  height: 70px;
+  right: 28%;
+  bottom: 28%;
+}
+
+.campus-node-right {
+  width: 54px;
+  height: 54px;
+  right: 10%;
+  bottom: 16%;
+  background: linear-gradient(180deg, #f2c161 0%, #e6a63c 100%);
+}
+
+.campus-cloud {
+  position: absolute;
+  height: 26px;
+  border-radius: 999px;
+  background: #f7fbff;
+  box-shadow: 0 8px 18px rgba(110, 138, 190, 0.15);
+}
+
+.campus-cloud::before,
+.campus-cloud::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  background: #f7fbff;
+}
+
+.campus-cloud::before {
+  width: 24px;
+  height: 24px;
+  left: 8px;
+  top: -10px;
+}
+
+.campus-cloud::after {
+  width: 30px;
+  height: 30px;
+  right: 12px;
+  top: -12px;
+}
+
+.campus-cloud-one {
+  width: 106px;
+  left: 18%;
+  bottom: 10%;
+}
+
+.campus-cloud-two {
+  width: 126px;
+  right: 14%;
+  bottom: 8%;
+}
+
 @keyframes swirl {
   from {
     transform: rotate(0deg) scale(1.1);
@@ -295,6 +676,59 @@ p {
 
   .glass-card {
     padding: 18px;
+  }
+
+  .login-split-card {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .role-split-card {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .login-copy-column {
+    padding: 30px 20px;
+  }
+
+  .role-copy-column {
+    padding: 30px 20px;
+  }
+
+  .login-main-title {
+    margin-top: 14px;
+    font-size: clamp(1.9rem, 8vw, 2.5rem);
+  }
+
+  .google-signin-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .role-option-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .role-continue-btn {
+    width: 100%;
+  }
+
+  .login-visual-column {
+    min-height: 260px;
+  }
+
+  .role-visual-column {
+    min-height: 280px;
+  }
+
+  .login-visual-image {
+    object-position: center 65%;
+  }
+
+  .role-badge {
+    font-size: 0.7rem;
+    padding: 8px 12px;
   }
 }
 
