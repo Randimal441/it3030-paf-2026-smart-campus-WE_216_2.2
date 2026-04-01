@@ -100,26 +100,38 @@ export default function ResourceForm({ resourceId = null, onSuccess, onCancel })
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
       <h2>{isEditMode ? "Edit Resource" : "Add Resource"}</h2>
 
       {error && <p style={{ color: "#b00020" }}>{error}</p>}
 
       <div>
-        <label htmlFor="name">Name</label>
+        <label htmlFor="name" style={{ display: "block", marginBottom: "4px", fontSize: "14px", fontWeight: "600" }}>
+          Name
+        </label>
         <input
           id="name"
           name="name"
           type="text"
           value={formData.name}
           onChange={handleChange}
+          style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--outline)" }}
           required
         />
       </div>
 
       <div>
-        <label htmlFor="type">Type</label>
-        <select id="type" name="type" value={formData.type} onChange={handleChange} required>
+        <label htmlFor="type" style={{ display: "block", marginBottom: "4px", fontSize: "14px", fontWeight: "600" }}>
+          Type
+        </label>
+        <select
+          id="type"
+          name="type"
+          value={formData.type}
+          onChange={handleChange}
+          style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--outline)" }}
+          required
+        >
           {RESOURCE_TYPES.map((type) => (
             <option key={type} value={type}>
               {type}
@@ -129,7 +141,9 @@ export default function ResourceForm({ resourceId = null, onSuccess, onCancel })
       </div>
 
       <div>
-        <label htmlFor="capacity">Capacity</label>
+        <label htmlFor="capacity" style={{ display: "block", marginBottom: "4px", fontSize: "14px", fontWeight: "600" }}>
+          Capacity
+        </label>
         <input
           id="capacity"
           name="capacity"
@@ -137,53 +151,74 @@ export default function ResourceForm({ resourceId = null, onSuccess, onCancel })
           min="1"
           value={formData.capacity}
           onChange={handleChange}
+          style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--outline)" }}
           required
         />
       </div>
 
       <div>
-        <label htmlFor="location">Location</label>
+        <label htmlFor="location" style={{ display: "block", marginBottom: "4px", fontSize: "14px", fontWeight: "600" }}>
+          Location
+        </label>
         <input
           id="location"
           name="location"
           type="text"
           value={formData.location}
           onChange={handleChange}
+          style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--outline)" }}
           required
         />
       </div>
 
-      <div>
-        <label htmlFor="availabilityStartTime">Availability Start Time</label>
-        <input
-          id="availabilityStartTime"
-          name="availabilityStartTime"
-          type="time"
-          value={formData.availabilityStartTime}
-          onChange={handleChange}
-          required
-        />
+      <div style={{ display: "flex", gap: "10px" }}>
+        <div style={{ flex: 1 }}>
+          <label
+            htmlFor="availabilityStartTime"
+            style={{ display: "block", marginBottom: "4px", fontSize: "14px", fontWeight: "600" }}
+          >
+            Availability Start Time
+          </label>
+          <input
+            id="availabilityStartTime"
+            name="availabilityStartTime"
+            type="time"
+            value={formData.availabilityStartTime}
+            onChange={handleChange}
+            style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--outline)" }}
+            required
+          />
+        </div>
+
+        <div style={{ flex: 1 }}>
+          <label
+            htmlFor="availabilityEndTime"
+            style={{ display: "block", marginBottom: "4px", fontSize: "14px", fontWeight: "600" }}
+          >
+            Availability End Time
+          </label>
+          <input
+            id="availabilityEndTime"
+            name="availabilityEndTime"
+            type="time"
+            value={formData.availabilityEndTime}
+            onChange={handleChange}
+            style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--outline)" }}
+            required
+          />
+        </div>
       </div>
 
       <div>
-        <label htmlFor="availabilityEndTime">Availability End Time</label>
-        <input
-          id="availabilityEndTime"
-          name="availabilityEndTime"
-          type="time"
-          value={formData.availabilityEndTime}
-          onChange={handleChange}
-          required
-        />
-      </div>
-
-      <div>
-        <label htmlFor="status">Status</label>
+        <label htmlFor="status" style={{ display: "block", marginBottom: "4px", fontSize: "14px", fontWeight: "600" }}>
+          Status
+        </label>
         <select
           id="status"
           name="status"
           value={formData.status}
           onChange={handleChange}
+          style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--outline)" }}
           required
         >
           {RESOURCE_STATUSES.map((status) => (
@@ -194,12 +229,18 @@ export default function ResourceForm({ resourceId = null, onSuccess, onCancel })
         </select>
       </div>
 
-      <div style={{ marginTop: "1rem", display: "flex", gap: "0.5rem" }}>
-        <button type="submit" disabled={isSubmitting}>
+      <div style={{ marginTop: "8px", display: "flex", gap: "10px" }}>
+        <button type="submit" className="cta-btn" style={{ flex: 1 }} disabled={isSubmitting}>
           {isSubmitting ? "Saving..." : isEditMode ? "Update" : "Create"}
         </button>
         {onCancel && (
-          <button type="button" onClick={onCancel} disabled={isSubmitting}>
+          <button
+            type="button"
+            className="cta-btn secondary"
+            style={{ flex: 1 }}
+            onClick={onCancel}
+            disabled={isSubmitting}
+          >
             Cancel
           </button>
         )}
