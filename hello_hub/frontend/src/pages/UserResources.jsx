@@ -1,9 +1,6 @@
 import React from "react";
+import ResourceList from "./ResourceList";
 
 export default function UserResources() {
-  return (
-    <div>
-      <h2>This is user resources page</h2>
-    </div>
-  );
+  return <ResourceList />;
 }

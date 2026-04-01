@@ -47,6 +47,10 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/error", "/oauth2/**", "/login/**", "/api/public/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/resources/**").hasAnyRole("ADMIN", "STUDENT", "LECTURER", "TECHNICIAN")
+                    .requestMatchers(HttpMethod.POST, "/api/resources").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.PUT, "/api/resources/**").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.DELETE, "/api/resources/**").hasRole("ADMIN")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/student/**").hasRole("STUDENT")
                         .requestMatchers("/api/lecturer/**").hasRole("LECTURER")
@@ -68,7 +72,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:3000"));
+        configuration.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:5174", "http://localhost:3000"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
