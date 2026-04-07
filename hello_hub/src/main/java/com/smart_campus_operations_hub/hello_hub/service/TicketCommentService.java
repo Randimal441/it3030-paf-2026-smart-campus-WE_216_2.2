@@ -9,4 +9,8 @@ public interface TicketCommentService {
      TicketComment addComment(CommentRequestDTO dto, String email);
 
     List<TicketComment> getCommentsByTicket(String ticketId, String email);
+
+    TicketComment updateComment(String commentId, CommentRequestDTO dto, String email);
+
+    void deleteComment(String commentId, String email);
 }
