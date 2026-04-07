@@ -52,6 +52,25 @@ const getStatusClass = (statusLabel = "") => {
   return "progress";
 };
 
+const getPriorityClass = (priorityLabel = "") => {
+  const normalized = priorityLabel.trim().toLowerCase();
+
+  if (normalized === "low") {
+    return "priority-low";
+  }
+  if (normalized === "medium") {
+    return "priority-medium";
+  }
+  if (normalized === "high") {
+    return "priority-high";
+  }
+  if (normalized === "urgent") {
+    return "priority-urgent";
+  }
+
+  return "priority-normal";
+};
+
 const formatDate = (dateValue) => {
   if (!dateValue) {
     return "Not available";
@@ -69,6 +88,34 @@ const formatDate = (dateValue) => {
   });
 };
 
+const formatCommentTimestamp = (dateValue) => {
+  if (!dateValue) {
+    return "Just now";
+  }
+
+  const parsedDate = new Date(dateValue);
+  if (Number.isNaN(parsedDate.getTime())) {
+    return "Just now";
+  }
+
+  return parsedDate.toLocaleString("en-US", {
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const mapComment = (comment) => ({
+  id: comment?.id || `${comment?.commenterEmail || "user"}-${comment?.createdAt || "now"}`,
+  commenterName: comment?.commenterName || "Unknown",
+  commenterEmail: comment?.commenterEmail || "No email",
+  commenterRole: comment?.commenterRole || "USER",
+  message: comment?.message || "",
+  createdAt: formatCommentTimestamp(comment?.createdAt),
+});
+
 const mapTicket = (ticket) => {
   const statusLabel = normalizeStatus(ticket?.status || "IN_PROGRESS");
 
@@ -82,6 +129,7 @@ const mapTicket = (ticket) => {
     category: ticket?.category || "General",
     location: ticket?.location || "Not specified",
     priority: toTitleCase((ticket?.priority || "Normal").replace(/_/g, " ")),
+      priorityClass: getPriorityClass(ticket?.priority || "Normal"),
     createdByName: ticket?.createdByName || "Unknown requester",
     createdByEmail: ticket?.createdByEmail || "No email",
     contact: ticket?.contact || "Not provided",
@@ -108,6 +156,76 @@ export default function TechnianTickets() {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedTicketForDetails, setSelectedTicketForDetails] = useState(null);
   const [previewImageUrl, setPreviewImageUrl] = useState("");
+  const [commentCountsByTicket, setCommentCountsByTicket] = useState({});
+  const [isCommentsModalOpen, setIsCommentsModalOpen] = useState(false);
+  const [selectedTicketForComments, setSelectedTicketForComments] = useState(null);
+  const [comments, setComments] = useState([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentsError, setCommentsError] = useState("");
+  const [newComment, setNewComment] = useState("");
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState("");
+  const [commentToDelete, setCommentToDelete] = useState(null);
+
+  const currentUser = (() => {
+    try {
+      const rawUser = localStorage.getItem("user");
+      return rawUser ? JSON.parse(rawUser) : null;
+    } catch {
+      return null;
+    }
+  })();
+  const currentUserEmail = currentUser?.email || "";
+
+  const fetchCommentCounts = useCallback(async (ticketList) => {
+    if (!Array.isArray(ticketList) || ticketList.length === 0) {
+      setCommentCountsByTicket({});
+      return;
+    }
+
+    const results = await Promise.allSettled(
+      ticketList.map((ticket) => api.get(`/api/comments/${ticket.id}`))
+    );
+
+    const counts = {};
+    ticketList.forEach((ticket, index) => {
+      const result = results[index];
+      counts[ticket.id] =
+        result?.status === "fulfilled" && Array.isArray(result.value?.data)
+          ? result.value.data.length
+          : 0;
+    });
+
+    setCommentCountsByTicket(counts);
+  }, []);
+
+  const fetchCommentsByTicket = useCallback(async (ticketId) => {
+    if (!ticketId) {
+      setComments([]);
+      setCommentsError("Ticket is not selected.");
+      return;
+    }
+
+    setCommentsLoading(true);
+    setCommentsError("");
+
+    try {
+      const response = await api.get(`/api/comments/${ticketId}`);
+      const mappedComments = Array.isArray(response.data) ? response.data.map(mapComment) : [];
+      setComments(mappedComments);
+      setCommentCountsByTicket((previous) => ({
+        ...previous,
+        [ticketId]: mappedComments.length,
+      }));
+    } catch (requestError) {
+      setComments([]);
+      setCommentsError(
+        requestError?.response?.data?.message || "Failed to load ticket comments."
+      );
+    } finally {
+      setCommentsLoading(false);
+    }
+  }, []);
 
   const fetchTechnicianTickets = useCallback(async () => {
     setLoading(true);
@@ -116,13 +234,15 @@ export default function TechnianTickets() {
     try {
       const response = await api.get("/api/tickets/technician/tickets");
       const incomingTickets = Array.isArray(response.data) ? response.data : [];
-      setTickets(incomingTickets.map(mapTicket));
+      const mappedTickets = incomingTickets.map(mapTicket);
+      setTickets(mappedTickets);
+      fetchCommentCounts(mappedTickets);
     } catch (requestError) {
       setError(requestError?.response?.data?.message || "Failed to load technician tickets.");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [fetchCommentCounts]);
 
   useEffect(() => {
     fetchTechnicianTickets();
@@ -212,6 +332,132 @@ export default function TechnianTickets() {
     setPreviewImageUrl("");
   }, []);
 
+  const openCommentsModal = useCallback(
+    async (ticket, event) => {
+      if (event) {
+        event.stopPropagation();
+      }
+
+      setSelectedTicketForComments(ticket);
+      setIsCommentsModalOpen(true);
+      setNewComment("");
+      setEditingCommentId("");
+      await fetchCommentsByTicket(ticket?.id);
+    },
+    [fetchCommentsByTicket]
+  );
+
+  const closeCommentsModal = useCallback(() => {
+    if (isSubmittingComment) {
+      return;
+    }
+
+    setIsCommentsModalOpen(false);
+    setSelectedTicketForComments(null);
+    setComments([]);
+    setCommentsError("");
+    setNewComment("");
+    setEditingCommentId("");
+    setCommentToDelete(null);
+  }, [isSubmittingComment]);
+
+  const startEditComment = useCallback((comment) => {
+    setEditingCommentId(comment.id);
+    setNewComment(comment.message);
+    setCommentsError("");
+  }, []);
+
+  const cancelEditComment = useCallback(() => {
+    setEditingCommentId("");
+    setNewComment("");
+    setCommentsError("");
+  }, []);
+
+  const requestDeleteComment = useCallback((comment) => {
+    if (!comment?.id) {
+      return;
+    }
+    setCommentToDelete(comment);
+  }, []);
+
+  const closeDeleteCommentModal = useCallback(() => {
+    if (isSubmittingComment) {
+      return;
+    }
+    setCommentToDelete(null);
+  }, [isSubmittingComment]);
+
+  const confirmDeleteComment = useCallback(
+    async () => {
+      if (!selectedTicketForComments?.id || !commentToDelete?.id) {
+        setCommentsError("Comment is not selected.");
+        return;
+      }
+
+      setCommentsError("");
+      setIsSubmittingComment(true);
+
+      try {
+        await api.delete(`/api/comments/${commentToDelete.id}`);
+        if (editingCommentId === commentToDelete.id) {
+          cancelEditComment();
+        }
+        setCommentToDelete(null);
+        await fetchCommentsByTicket(selectedTicketForComments.id);
+      } catch (requestError) {
+        setCommentsError(
+          requestError?.response?.data?.message || "Failed to delete comment. Please try again."
+        );
+      } finally {
+        setIsSubmittingComment(false);
+      }
+    },
+    [cancelEditComment, commentToDelete, editingCommentId, fetchCommentsByTicket, selectedTicketForComments]
+  );
+
+  const submitComment = useCallback(
+    async (event) => {
+      event.preventDefault();
+
+      const message = newComment.trim();
+      if (!message) {
+        setCommentsError("Please enter a comment before submitting.");
+        return;
+      }
+
+      if (!selectedTicketForComments?.id) {
+        setCommentsError("Ticket is not selected.");
+        return;
+      }
+
+      setCommentsError("");
+      setIsSubmittingComment(true);
+
+      try {
+        const payload = {
+          ticketId: selectedTicketForComments.id,
+          message,
+        };
+
+        if (editingCommentId) {
+          await api.put(`/api/comments/${editingCommentId}`, payload);
+        } else {
+          await api.post("/api/comments", payload);
+        }
+
+        cancelEditComment();
+        await fetchCommentsByTicket(selectedTicketForComments.id);
+      } catch (requestError) {
+        setCommentsError(
+          requestError?.response?.data?.message || "Failed to save comment. Please try again."
+        );
+      } finally {
+        setIsSubmittingComment(false);
+      }
+    },
+    [cancelEditComment, editingCommentId, fetchCommentsByTicket, newComment, selectedTicketForComments]
+  );
+
   const canResolveTicket = (status) => status === "In Progress";
 
   return (
@@ -295,6 +541,21 @@ export default function TechnianTickets() {
                   <div className="ticket-top-row">
                     <span className="ticket-id">#{ticket.id}</span>
                     <span className={`ticket-status ${ticket.statusClass}`}>{ticket.status}</span>
+                    <span className={`ticket-priority ${ticket.priorityClass}`}>
+                      {ticket.priority}
+                    </span>
+                    <button
+                      type="button"
+                      className="ticket-comment-chip"
+                      aria-label={`Open comments for ticket ${ticket.id}`}
+                      onClick={(event) => openCommentsModal(ticket, event)}
+                      onKeyDown={(event) => event.stopPropagation()}
+                    >
+                      <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
+                        <path d="M4 5h16a2 2 0 012 2v9a2 2 0 01-2 2H8l-5 4v-4H4a2 2 0 01-2-2V7a2 2 0 012-2zm0 2v9h1v1.17L7.21 16H20V7H4z" />
+                      </svg>
+                      <span>{commentCountsByTicket[ticket.id] || 0}</span>
+                    </button>
                   </div>
 
                   <h3>{ticket.title}</h3>
@@ -310,7 +571,6 @@ export default function TechnianTickets() {
 
                     <span className="ticket-tag">{ticket.category}</span>
                     <span className="ticket-tag">{ticket.location}</span>
-                    <span className="ticket-tag">Priority: {ticket.priority}</span>
                     <span className="ticket-tag">By: {ticket.createdByName}</span>
                     <span className="ticket-tag">{ticket.createdByEmail}</span>
                   </div>
@@ -567,6 +827,177 @@ export default function TechnianTickets() {
                 </div>
               </div>
             )}
+          </div>
+        </>
+      )}
+
+      {isCommentsModalOpen && selectedTicketForComments && (
+        <>
+          <div className="modal-overlay" onClick={closeCommentsModal} role="presentation"></div>
+          <div
+            className="modal-container"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="comments-modal-title"
+          >
+            <div className="modal-header">
+              <h2 id="comments-modal-title">Ticket Comments #{selectedTicketForComments.id}</h2>
+              <button
+                type="button"
+                className="modal-close-btn"
+                onClick={closeCommentsModal}
+                aria-label="Close comments modal"
+                disabled={isSubmittingComment}
+              >
+                x
+              </button>
+            </div>
+
+            <div className="ticket-comments-modal-body">
+              <div className="ticket-comments-list" role="list" aria-label="Ticket comments list">
+                {commentsLoading && (
+                  <div className="ticket-empty-state" role="status">
+                    Loading comments...
+                  </div>
+                )}
+
+                {!commentsLoading && comments.length === 0 && !commentsError && (
+                  <div className="ticket-empty-state" role="status">
+                    No comments yet. Be the first to comment.
+                  </div>
+                )}
+
+                {!commentsLoading &&
+                  comments.map((comment) => (
+                    <article key={comment.id} className="ticket-comment-item" role="listitem">
+                      <div className="ticket-comment-item-header">
+                        <div>
+                          <h4>{comment.commenterName}</h4>
+                          <span>{comment.commenterEmail}</span>
+                        </div>
+                        <div className="ticket-comment-item-meta">
+                          <span>{comment.commenterRole}</span>
+                          <span>{comment.createdAt}</span>
+                        </div>
+                      </div>
+                      <p>{comment.message}</p>
+                      {comment.commenterEmail === currentUserEmail && (
+                        <div className="ticket-comment-actions">
+                          <button
+                            type="button"
+                            className="btn btn-secondary ticket-comment-action-btn"
+                            onClick={() => startEditComment(comment)}
+                            disabled={isSubmittingComment}
+                            aria-label="Edit comment"
+                            title="Edit comment"
+                          >
+                            <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
+                              <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm2.92 2.33H5v-.92l9.06-9.06.92.92-9.06 9.06zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.84 1.84 3.75 3.75 1.84-1.84z" />
+                            </svg>
+                            <span>Edit</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-secondary ticket-comment-action-btn"
+                            onClick={() => requestDeleteComment(comment)}
+                            disabled={isSubmittingComment}
+                            aria-label="Delete comment"
+                            title="Delete comment"
+                          >
+                            <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
+                              <path d="M9 3.75A1.75 1.75 0 0110.75 2h2.5A1.75 1.75 0 0115 3.75V5h4a1 1 0 010 2h-1.05l-.7 11.2A2.25 2.25 0 0114 20H10a2.25 2.25 0 01-2.25-1.8L7.05 7H6a1 1 0 110-2h4V3.75zM10.75 5h2.5v-.95h-2.5V5zM9.05 7l.7 11.1c.02.27.24.48.51.48h3.48c.27 0 .49-.21.51-.48L15.95 7h-6.9zm2.2 2.25a.75.75 0 01.75.75v5.5a.75.75 0 01-1.5 0V10a.75.75 0 01.75-.75zm3 0a.75.75 0 01.75.75v5.5a.75.75 0 01-1.5 0V10a.75.75 0 01.75-.75z" />
+                            </svg>
+                            <span>Delete</span>
+                          </button>
+                        </div>
+                      )}
+                    </article>
+                  ))}
+              </div>
+
+              <form className="ticket-comment-form" onSubmit={submitComment}>
+                <label htmlFor="new-ticket-comment">
+                  {editingCommentId ? "Update Comment" : "Add Comment"} <span className="required">*</span>
+                </label>
+                <textarea
+                  id="new-ticket-comment"
+                  rows="3"
+                  placeholder="Write your comment"
+                  value={newComment}
+                  onChange={(event) => {
+                    setNewComment(event.target.value);
+                    if (commentsError) {
+                      setCommentsError("");
+                    }
+                  }}
+                  disabled={isSubmittingComment}
+                ></textarea>
+                {commentsError && <span className="error-message">{commentsError}</span>}
+
+                <div className="modal-footer ticket-comment-footer">
+                  {editingCommentId && (
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={cancelEditComment}
+                      disabled={isSubmittingComment}
+                    >
+                      Cancel Edit
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={closeCommentsModal}
+                    disabled={isSubmittingComment}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-primary" disabled={isSubmittingComment}>
+                    {isSubmittingComment
+                      ? editingCommentId
+                        ? "Updating..."
+                        : "Posting..."
+                      : editingCommentId
+                        ? "Update Comment"
+                        : "Post Comment"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </>
+      )}
+
+      {isCommentsModalOpen && commentToDelete && (
+        <>
+          <div className="ticket-confirm-overlay" onClick={closeDeleteCommentModal} role="presentation"></div>
+          <div
+            className="ticket-confirm-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-comment-title"
+          >
+            <h3 id="delete-comment-title">Delete Comment?</h3>
+            <p>This action cannot be undone.</p>
+            <div className="ticket-confirm-actions">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={closeDeleteCommentModal}
+                disabled={isSubmittingComment}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={confirmDeleteComment}
+                disabled={isSubmittingComment}
+              >
+                {isSubmittingComment ? "Deleting..." : "Delete"}
+              </button>
+            </div>
           </div>
         </>
       )}
