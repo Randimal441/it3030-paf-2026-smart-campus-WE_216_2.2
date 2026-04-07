@@ -9,6 +9,7 @@ import com.smart_campus_operations_hub.hello_hub.repository.ResourceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -19,6 +20,11 @@ public class ResourceService {
 
     public ResourceResponseDTO createResource(ResourceRequestDTO dto) {
         Resource resource = mapToEntity(dto);
+        Long nextId = resourceRepository.findTopByOrderByIdDesc()
+                .map(existing -> existing.getId() + 1)
+                .orElse(1L);
+        resource.setId(nextId);
+        resource.setCreatedAt(LocalDateTime.now());
         Resource savedResource = resourceRepository.save(resource);
         return mapToResponseDTO(savedResource);
     }
