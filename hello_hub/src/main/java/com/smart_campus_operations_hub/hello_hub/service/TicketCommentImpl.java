@@ -65,4 +65,34 @@ public class TicketCommentImpl implements TicketCommentService {
 
         return commentRepository.findByTicketId(ticketId);
     }
+
+    @Override
+    public TicketComment updateComment(String commentId, CommentRequestDTO dto, String email) {
+
+        TicketComment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("Comment not found"));
+
+        
+        if (!email.equals(comment.getCommenterEmail())) {
+            throw new RuntimeException("You can only update your own comment");
+        }
+
+        comment.setMessage(dto.getMessage());
+
+        return commentRepository.save(comment);
+    }
+
+    @Override
+    public void deleteComment(String commentId, String email) {
+
+        TicketComment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("Comment not found"));
+
+        if (!email.equals(comment.getCommenterEmail())) {
+            throw new RuntimeException("You can only delete your own comment");
+        }
+
+        commentRepository.deleteById(commentId);
+    }
+
 }

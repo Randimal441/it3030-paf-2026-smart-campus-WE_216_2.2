@@ -34,4 +34,23 @@ public class TicketCommentController {
         String email = authentication.getName();
         return commentService.getCommentsByTicket(ticketId, email);
     }
+
+    @PutMapping("/{commentId}")
+    public TicketComment updateComment(@PathVariable String commentId,
+                                   @RequestBody CommentRequestDTO dto,
+                                   Authentication authentication) {
+
+    String email = authentication.getName();
+    return commentService.updateComment(commentId, dto, email);
+    }
+
+    @DeleteMapping("/{commentId}")
+    public String deleteComment(@PathVariable String commentId,
+                            Authentication authentication) {
+
+    String email = authentication.getName();
+    commentService.deleteComment(commentId, email);
+    return "Comment deleted successfully";
+    }
+    
 }
