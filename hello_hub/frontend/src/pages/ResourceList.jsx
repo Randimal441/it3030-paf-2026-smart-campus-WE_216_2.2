@@ -6,6 +6,18 @@ import { useAuth } from "../context/AuthContext";
 
 const RESOURCE_TYPES = ["LECTURE_HALL", "LAB", "MEETING_ROOM", "EQUIPMENT"];
 
+const resolveResourceDate = (resource) => {
+  if (resource?.resourceDate) {
+    return resource.resourceDate;
+  }
+
+  if (resource?.createdAt) {
+    return resource.createdAt.slice(0, 10);
+  }
+
+  return "";
+};
+
 const formatTime = (value) => {
   if (!value) {
     return "-";
@@ -37,6 +49,7 @@ export default function ResourceList() {
   const [error, setError] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [capacityFilter, setCapacityFilter] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingResourceId, setEditingResourceId] = useState(null);
   const [selectedResource, setSelectedResource] = useState(null);
@@ -135,7 +148,10 @@ export default function ResourceList() {
       setIsLoading(true);
       setError("");
       const response = await searchResources(params);
-      const results = response.data || [];
+      const apiResults = response.data || [];
+      const results = dateFilter
+        ? apiResults.filter((resource) => resolveResourceDate(resource) === dateFilter)
+        : apiResults;
       setResources(results);
       // Auto-select first resource if available
       if (results.length > 0) {
@@ -155,6 +171,7 @@ export default function ResourceList() {
   const handleClearFilters = async () => {
     setTypeFilter("");
     setCapacityFilter("");
+    setDateFilter("");
 
     await loadResources();
   };
@@ -198,6 +215,13 @@ export default function ResourceList() {
               placeholder="Minimum Capacity"
               value={capacityFilter}
               onChange={(e) => setCapacityFilter(e.target.value)}
+            />
+
+            <input
+              className="resource-filter-input"
+              type="date"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
             />
 
             <button type="button" className="ticket-filter-btn active" onClick={handleSearch}>
