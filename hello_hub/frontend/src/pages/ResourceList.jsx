@@ -7,12 +7,23 @@ import { useAuth } from "../context/AuthContext";
 const RESOURCE_TYPES = ["LECTURE_HALL", "LAB", "MEETING_ROOM", "EQUIPMENT"];
 
 const resolveResourceDate = (resource) => {
-  if (resource?.resourceDate) {
-    return resource.resourceDate;
+  const dateValue = resource?.resourceDate;
+  if (!dateValue) {
+    return "";
   }
 
-  if (resource?.createdAt) {
-    return resource.createdAt.slice(0, 10);
+  if (Array.isArray(dateValue) && dateValue.length === 3) {
+    const [year, month, day] = dateValue;
+    return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  }
+
+  const stringValue = String(dateValue);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(stringValue)) {
+    return stringValue;
+  }
+
+  if (stringValue.length >= 10) {
+    return stringValue.slice(0, 10);
   }
 
   return "";
@@ -363,6 +374,10 @@ export default function ResourceList() {
                   <strong>
                     {formatTime(selectedResource.availabilityStartTime)} - {formatTime(selectedResource.availabilityEndTime)}
                   </strong>
+                </div>
+                <div className="resource-detail-item">
+                  <span>Date</span>
+                  <strong>{resolveResourceDate(selectedResource) || "-"}</strong>
                 </div>
               </div>
 

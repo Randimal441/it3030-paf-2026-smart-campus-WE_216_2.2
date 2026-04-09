@@ -1,5 +1,6 @@
 package com.smart_campus_operations_hub.hello_hub.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,6 +30,7 @@ public class Resource {
 
     private String location;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate resourceDate;
 
     private LocalTime availabilityStartTime;
