@@ -175,6 +175,13 @@ export default function ResourceList() {
     }
   };
 
+  const handleClearFilters = async () => {
+    setTypeFilter("");
+    setCapacityFilter("");
+    setDateFilter("");
+    await loadResources();
+  };
+
   return (
     <div className="tickets-page">
       <section className="tickets-hero">
@@ -226,7 +233,7 @@ export default function ResourceList() {
             <button type="button" className="ticket-filter-btn active" onClick={handleSearch}>
               <span>Search</span>
             </button>
-            <button type="button" className="ticket-filter-btn" onClick={loadResources}>
+            <button type="button" className="ticket-filter-btn" onClick={handleClearFilters}>
               <span>Clear</span>
             </button>
           </div>
