@@ -2,6 +2,7 @@ package com.smart_campus_operations_hub.hello_hub.dto;
 
 import com.smart_campus_operations_hub.hello_hub.model.ResourceStatus;
 import com.smart_campus_operations_hub.hello_hub.model.ResourceType;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import lombok.AllArgsConstructor;
@@ -20,6 +21,7 @@ public class ResourceResponseDTO {
     private ResourceType type;
     private Integer capacity;
     private String location;
+    private LocalDate resourceDate;
     private LocalTime availabilityStartTime;
     private LocalTime availabilityEndTime;
     private ResourceStatus status;

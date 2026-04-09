@@ -5,6 +5,7 @@ import com.smart_campus_operations_hub.hello_hub.model.ResourceType;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,6 +30,9 @@ public class ResourceRequestDTO {
 
     @NotBlank
     private String location;
+
+    @NotNull
+    private LocalDate resourceDate;
 
     @NotNull
     private LocalTime availabilityStartTime;

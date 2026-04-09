@@ -1,23 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { deleteResource, getAllResources, searchResources } from "../api/resourceService";
 import ResourceForm from "./ResourceForm";
 import { useAuth } from "../context/AuthContext";
 
 const RESOURCE_TYPES = ["LECTURE_HALL", "LAB", "MEETING_ROOM", "EQUIPMENT"];
-
-const formatDateTime = (value) => {
-  if (!value) {
-    return "-";
-  }
-
-  const parsedDate = new Date(value);
-  if (Number.isNaN(parsedDate.getTime())) {
-    return value;
-  }
-
-  return parsedDate.toLocaleDateString();
-};
 
 const formatTime = (value) => {
   if (!value) {
@@ -50,12 +37,10 @@ export default function ResourceList() {
   const [error, setError] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [capacityFilter, setCapacityFilter] = useState("");
-  const [dateFilter, setDateFilter] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingResourceId, setEditingResourceId] = useState(null);
   const [selectedResource, setSelectedResource] = useState(null);
   const [showResourceDetails, setShowResourceDetails] = useState(false);
-  const dateInputRef = useRef(null);
 
   useEffect(() => {
     loadResources();
@@ -150,16 +135,7 @@ export default function ResourceList() {
       setIsLoading(true);
       setError("");
       const response = await searchResources(params);
-      const apiResults = response.data || [];
-      const results = dateFilter
-        ? apiResults.filter((resource) => {
-            if (!resource?.createdAt) {
-              return false;
-            }
-
-            return resource.createdAt.slice(0, 10) === dateFilter;
-          })
-        : apiResults;
+      const results = response.data || [];
       setResources(results);
       // Auto-select first resource if available
       if (results.length > 0) {
@@ -179,11 +155,6 @@ export default function ResourceList() {
   const handleClearFilters = async () => {
     setTypeFilter("");
     setCapacityFilter("");
-    setDateFilter("");
-
-    if (dateInputRef.current) {
-      dateInputRef.current.value = "";
-    }
 
     await loadResources();
   };
@@ -229,14 +200,6 @@ export default function ResourceList() {
               onChange={(e) => setCapacityFilter(e.target.value)}
             />
 
-            <input
-              ref={dateInputRef}
-              className="resource-filter-input"
-              type="date"
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-            />
-
             <button type="button" className="ticket-filter-btn active" onClick={handleSearch}>
               <span>Search</span>
             </button>
@@ -272,7 +235,6 @@ export default function ResourceList() {
                       <th>Type</th>
                       {canManageResources && <th>Capacity</th>}
                       {canManageResources && <th>Location</th>}
-                      {canManageResources && <th>Date</th>}
                       <th>Status</th>
                       {canManageResources && <th>Actions</th>}
                     </tr>
@@ -280,7 +242,7 @@ export default function ResourceList() {
                   <tbody>
                     {resources.length === 0 ? (
                       <tr>
-                        <td colSpan={canManageResources ? 7 : 3}>No resources available.</td>
+                        <td colSpan={canManageResources ? 6 : 3}>No resources available.</td>
                       </tr>
                     ) : (
                       resources.map((resource) => (
@@ -293,7 +255,6 @@ export default function ResourceList() {
                           <td>{resource.type}</td>
                           {canManageResources && <td>{resource.capacity}</td>}
                           {canManageResources && <td>{resource.location}</td>}
-                          {canManageResources && <td>{formatDateTime(resource.createdAt)}</td>}
                           <td>
                             <span
                               className={
@@ -378,10 +339,6 @@ export default function ResourceList() {
                   <strong>
                     {formatTime(selectedResource.availabilityStartTime)} - {formatTime(selectedResource.availabilityEndTime)}
                   </strong>
-                </div>
-                <div className="resource-detail-item">
-                  <span>Date</span>
-                  <strong>{formatDateTime(selectedResource.createdAt)}</strong>
                 </div>
               </div>
 

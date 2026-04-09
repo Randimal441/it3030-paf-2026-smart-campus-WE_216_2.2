@@ -13,6 +13,7 @@ const initialForm = {
   type: "LECTURE_HALL",
   capacity: "",
   location: "",
+  resourceDate: "",
   availabilityStartTime: "",
   availabilityEndTime: "",
   status: "ACTIVE",
@@ -44,6 +45,7 @@ export default function ResourceForm({ resourceId = null, onSuccess, onCancel })
           type: resource?.type ?? "LECTURE_HALL",
           capacity: resource?.capacity ?? "",
           location: resource?.location ?? "",
+          resourceDate: resource?.resourceDate ?? "",
           availabilityStartTime: resource?.availabilityStartTime ?? "",
           availabilityEndTime: resource?.availabilityEndTime ?? "",
           status: resource?.status ?? "ACTIVE",
@@ -165,6 +167,21 @@ export default function ResourceForm({ resourceId = null, onSuccess, onCancel })
           name="location"
           type="text"
           value={formData.location}
+          onChange={handleChange}
+          style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--outline)" }}
+          required
+        />
+      </div>
+
+      <div>
+        <label htmlFor="resourceDate" style={{ display: "block", marginBottom: "4px", fontSize: "14px", fontWeight: "600" }}>
+          Date
+        </label>
+        <input
+          id="resourceDate"
+          name="resourceDate"
+          type="date"
+          value={formData.resourceDate}
           onChange={handleChange}
           style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--outline)" }}
           required
