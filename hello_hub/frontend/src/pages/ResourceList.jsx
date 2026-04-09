@@ -365,6 +365,10 @@ export default function ResourceList() {
                     {formatTime(selectedResource.availabilityStartTime)} - {formatTime(selectedResource.availabilityEndTime)}
                   </strong>
                 </div>
+                <div className="resource-detail-item">
+                  <span>Date</span>
+                  <strong>{formatDateTime(selectedResource.createdAt)}</strong>
+                </div>
               </div>
 
               {selectedResource.status === "OUT_OF_SERVICE" ? (
