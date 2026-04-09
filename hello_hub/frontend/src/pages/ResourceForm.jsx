@@ -8,11 +8,34 @@ import {
 const RESOURCE_TYPES = ["LECTURE_HALL", "LAB", "MEETING_ROOM", "EQUIPMENT"];
 const RESOURCE_STATUSES = ["ACTIVE", "OUT_OF_SERVICE"];
 
+const normalizeDate = (value) => {
+  if (!value) {
+    return "";
+  }
+
+  if (Array.isArray(value) && value.length === 3) {
+    const [year, month, day] = value;
+    return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  }
+
+  const stringValue = String(value);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(stringValue)) {
+    return stringValue;
+  }
+
+  if (stringValue.length >= 10) {
+    return stringValue.slice(0, 10);
+  }
+
+  return "";
+};
+
 const initialForm = {
   name: "",
   type: "LECTURE_HALL",
   capacity: "",
   location: "",
+  resourceDate: "",
   availabilityStartTime: "",
   availabilityEndTime: "",
   status: "ACTIVE",
@@ -44,6 +67,7 @@ export default function ResourceForm({ resourceId = null, onSuccess, onCancel })
           type: resource?.type ?? "LECTURE_HALL",
           capacity: resource?.capacity ?? "",
           location: resource?.location ?? "",
+          resourceDate: normalizeDate(resource?.resourceDate),
           availabilityStartTime: resource?.availabilityStartTime ?? "",
           availabilityEndTime: resource?.availabilityEndTime ?? "",
           status: resource?.status ?? "ACTIVE",
@@ -74,6 +98,7 @@ export default function ResourceForm({ resourceId = null, onSuccess, onCancel })
       const payload = {
         ...formData,
         capacity: Number(formData.capacity),
+        resourceDate: normalizeDate(formData.resourceDate),
       };
 
       const response = isEditMode
@@ -165,6 +190,21 @@ export default function ResourceForm({ resourceId = null, onSuccess, onCancel })
           name="location"
           type="text"
           value={formData.location}
+          onChange={handleChange}
+          style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--outline)" }}
+          required
+        />
+      </div>
+
+      <div>
+        <label htmlFor="resourceDate" style={{ display: "block", marginBottom: "4px", fontSize: "14px", fontWeight: "600" }}>
+          Date
+        </label>
+        <input
+          id="resourceDate"
+          name="resourceDate"
+          type="date"
+          value={formData.resourceDate}
           onChange={handleChange}
           style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--outline)" }}
           required

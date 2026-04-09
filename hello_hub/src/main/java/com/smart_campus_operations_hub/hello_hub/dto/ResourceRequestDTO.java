@@ -1,10 +1,12 @@
 package com.smart_campus_operations_hub.hello_hub.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.smart_campus_operations_hub.hello_hub.model.ResourceStatus;
 import com.smart_campus_operations_hub.hello_hub.model.ResourceType;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,6 +31,10 @@ public class ResourceRequestDTO {
 
     @NotBlank
     private String location;
+
+    @NotNull
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private LocalDate resourceDate;
 
     @NotNull
     private LocalTime availabilityStartTime;

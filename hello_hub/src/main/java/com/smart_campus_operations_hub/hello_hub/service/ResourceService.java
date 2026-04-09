@@ -49,6 +49,7 @@ public class ResourceService {
         existingResource.setType(dto.getType());
         existingResource.setCapacity(dto.getCapacity());
         existingResource.setLocation(dto.getLocation());
+        existingResource.setResourceDate(dto.getResourceDate());
         existingResource.setAvailabilityStartTime(dto.getAvailabilityStartTime());
         existingResource.setAvailabilityEndTime(dto.getAvailabilityEndTime());
         existingResource.setStatus(dto.getStatus());
@@ -104,6 +105,7 @@ public class ResourceService {
                 .type(dto.getType())
                 .capacity(dto.getCapacity())
                 .location(dto.getLocation())
+                .resourceDate(dto.getResourceDate())
                 .availabilityStartTime(dto.getAvailabilityStartTime())
                 .availabilityEndTime(dto.getAvailabilityEndTime())
                 .status(dto.getStatus())
@@ -117,6 +119,7 @@ public class ResourceService {
                 .type(resource.getType())
                 .capacity(resource.getCapacity())
                 .location(resource.getLocation())
+                .resourceDate(resource.getResourceDate())
                 .availabilityStartTime(resource.getAvailabilityStartTime())
                 .availabilityEndTime(resource.getAvailabilityEndTime())
                 .status(resource.getStatus())
