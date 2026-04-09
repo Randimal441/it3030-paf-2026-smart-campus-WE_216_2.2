@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { deleteResource, getAllResources, searchResources } from "../api/resourceService";
 import ResourceForm from "./ResourceForm";
@@ -55,6 +55,7 @@ export default function ResourceList() {
   const [editingResourceId, setEditingResourceId] = useState(null);
   const [selectedResource, setSelectedResource] = useState(null);
   const [showResourceDetails, setShowResourceDetails] = useState(false);
+  const dateInputRef = useRef(null);
 
   useEffect(() => {
     loadResources();
@@ -179,6 +180,11 @@ export default function ResourceList() {
     setTypeFilter("");
     setCapacityFilter("");
     setDateFilter("");
+
+    if (dateInputRef.current) {
+      dateInputRef.current.value = "";
+    }
+
     await loadResources();
   };
 
@@ -224,6 +230,7 @@ export default function ResourceList() {
             />
 
             <input
+              ref={dateInputRef}
               className="resource-filter-input"
               type="date"
               value={dateFilter}
