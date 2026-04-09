@@ -1051,6 +1051,17 @@ p {
   margin-top: 2px;
 }
 
+.resource-modal-sorry-btn,
+.resource-modal-sorry-btn:hover {
+  background: #d93025;
+  color: #fff;
+}
+
+.resource-modal-sorry-btn:disabled {
+  opacity: 1;
+  cursor: not-allowed;
+}
+
 .resource-actions {
   display: flex;
   gap: 6px;

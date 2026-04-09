@@ -364,20 +364,26 @@ export default function ResourceList() {
                     {formatTime(selectedResource.availabilityStartTime)} - {formatTime(selectedResource.availabilityEndTime)}
                   </strong>
                 </div>
-                <div className="resource-detail-item">
-                  <span>Status</span>
-                  <strong>{selectedResource.status || "-"}</strong>
-                </div>
               </div>
 
-              <button
-                type="button"
-                className="raise-ticket-btn resource-modal-booking-btn"
-                onClick={() => handleGoToBooking(selectedResource)}
-              >
-                <span aria-hidden="true">&#8594;</span>
-                Go to Booking
-              </button>
+              {selectedResource.status === "OUT_OF_SERVICE" ? (
+                <button
+                  type="button"
+                  className="raise-ticket-btn resource-modal-booking-btn resource-modal-sorry-btn"
+                  disabled
+                >
+                  sorry its not available
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="raise-ticket-btn resource-modal-booking-btn"
+                  onClick={() => handleGoToBooking(selectedResource)}
+                >
+                  <span aria-hidden="true">&#8594;</span>
+                  Go to Booking
+                </button>
+              )}
             </div>
           </div>
         </>
