@@ -50,7 +50,7 @@ export default function ResourceList() {
   const [error, setError] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [capacityFilter, setCapacityFilter] = useState("");
-  const [locationFilter, setLocationFilter] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingResourceId, setEditingResourceId] = useState(null);
   const [selectedResource, setSelectedResource] = useState(null);
@@ -141,9 +141,6 @@ export default function ResourceList() {
     if (typeFilter) {
       params.type = typeFilter;
     }
-    if (locationFilter.trim()) {
-      params.location = locationFilter.trim();
-    }
     if (capacityFilter !== "") {
       params.capacity = Number(capacityFilter);
     }
@@ -152,7 +149,16 @@ export default function ResourceList() {
       setIsLoading(true);
       setError("");
       const response = await searchResources(params);
-      const results = response.data || [];
+      const apiResults = response.data || [];
+      const results = dateFilter
+        ? apiResults.filter((resource) => {
+            if (!resource?.createdAt) {
+              return false;
+            }
+
+            return resource.createdAt.slice(0, 10) === dateFilter;
+          })
+        : apiResults;
       setResources(results);
       // Auto-select first resource if available
       if (results.length > 0) {
@@ -212,10 +218,9 @@ export default function ResourceList() {
 
             <input
               className="resource-filter-input"
-              type="text"
-              placeholder="Location"
-              value={locationFilter}
-              onChange={(e) => setLocationFilter(e.target.value)}
+              type="date"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
             />
 
             <button type="button" className="ticket-filter-btn active" onClick={handleSearch}>
