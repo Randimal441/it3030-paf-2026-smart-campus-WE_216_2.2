@@ -189,11 +189,7 @@ export default function ResourceList() {
               <span aria-hidden="true">+</span>
               Add Resource
             </button>
-          ) : (
-            <div className="resource-student-hint">
-              Click any resource row to view details and continue to booking.
-            </div>
-          )}
+          ) : null}
 
           <div className="tickets-filter-list" role="group" aria-label="Filters">
             <select className="resource-filter-input" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
