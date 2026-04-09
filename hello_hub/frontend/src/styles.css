@@ -988,6 +988,69 @@ p {
   background: #eaf1ff;
 }
 
+.resource-student-hint {
+  border: 1px dashed #c7d4ea;
+  border-radius: 12px;
+  background: #f7fbff;
+  color: #4f5f79;
+  font-size: 13px;
+  line-height: 1.45;
+  font-weight: 600;
+  padding: 12px;
+}
+
+.resource-detail-modal {
+  max-width: 520px;
+}
+
+.resource-detail-modal-body {
+  padding: 18px 24px 24px;
+}
+
+.resource-detail-modal-subtitle {
+  margin: 0 0 14px;
+  color: #5f6f87;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.resource-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.resource-detail-item {
+  border: 1px solid #e1e8f5;
+  border-radius: 12px;
+  background: #fbfdff;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.resource-detail-item span {
+  color: #7b8aa1;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.resource-detail-item strong {
+  color: #1f3252;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.resource-modal-booking-btn {
+  margin-top: 2px;
+}
+
 .resource-actions {
   display: flex;
   gap: 6px;
@@ -1284,6 +1347,18 @@ p {
 
   .ticket-card h3 {
     font-size: 19px;
+  }
+
+  .resource-detail-modal {
+    width: min(560px, calc(100vw - 20px));
+  }
+
+  .resource-detail-modal-body {
+    padding: 14px 14px 16px;
+  }
+
+  .resource-detail-grid {
+    grid-template-columns: 1fr;
   }
 
   .assign-tech-select {
