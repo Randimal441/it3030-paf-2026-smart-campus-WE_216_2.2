@@ -6,6 +6,37 @@ import { useAuth } from "../context/AuthContext";
 
 const RESOURCE_TYPES = ["LECTURE_HALL", "LAB", "MEETING_ROOM", "EQUIPMENT"];
 
+const resolveResourceDate = (resource) => {
+  const dateValue = resource?.resourceDate;
+  if (!dateValue) {
+    return "";
+  }
+
+  if (Array.isArray(dateValue) && dateValue.length === 3) {
+    const [year, month, day] = dateValue;
+    return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  }
+
+  const stringValue = String(dateValue);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(stringValue)) {
+    return stringValue;
+  }
+
+  if (stringValue.length >= 10) {
+    return stringValue.slice(0, 10);
+  }
+
+  return "";
+};
+
+const formatTime = (value) => {
+  if (!value) {
+    return "-";
+  }
+
+  return value.slice(0, 5);
+};
+
 const getStatusStyles = (status) => {
   if (status === "ACTIVE") {
     return {
@@ -29,10 +60,11 @@ export default function ResourceList() {
   const [error, setError] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [capacityFilter, setCapacityFilter] = useState("");
-  const [locationFilter, setLocationFilter] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingResourceId, setEditingResourceId] = useState(null);
   const [selectedResource, setSelectedResource] = useState(null);
+  const [showResourceDetails, setShowResourceDetails] = useState(false);
 
   useEffect(() => {
     loadResources();
@@ -60,15 +92,21 @@ export default function ResourceList() {
     }
   };
 
-  const handleGoToBooking = () => {
-    if (!selectedResource) {
+  const handleGoToBooking = (resource = selectedResource) => {
+    if (!resource) {
       alert("Please select a resource first");
       return;
     }
+
     // Navigate to user bookings page with selected resource
     const role = user?.role?.toLowerCase() || "student";
     const path = role === "admin" ? "/admin/bookings" : `/${role}/bookings`;
-    navigate(path, { state: { selectedResource: selectedResource.id, resourceName: selectedResource.name } });
+    navigate(path, { state: { selectedResource: resource.id, resourceName: resource.name } });
+  };
+
+  const handleStudentRowClick = (resource) => {
+    setSelectedResource(resource);
+    setShowResourceDetails(true);
   };
 
   const handleEdit = (resource) => {
@@ -113,9 +151,6 @@ export default function ResourceList() {
     if (typeFilter) {
       params.type = typeFilter;
     }
-    if (locationFilter.trim()) {
-      params.location = locationFilter.trim();
-    }
     if (capacityFilter !== "") {
       params.capacity = Number(capacityFilter);
     }
@@ -124,7 +159,10 @@ export default function ResourceList() {
       setIsLoading(true);
       setError("");
       const response = await searchResources(params);
-      const results = response.data || [];
+      const apiResults = response.data || [];
+      const results = dateFilter
+        ? apiResults.filter((resource) => resolveResourceDate(resource) === dateFilter)
+        : apiResults;
       setResources(results);
       // Auto-select first resource if available
       if (results.length > 0) {
@@ -139,6 +177,14 @@ export default function ResourceList() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleClearFilters = async () => {
+    setTypeFilter("");
+    setCapacityFilter("");
+    setDateFilter("");
+
+    await loadResources();
   };
 
   return (
@@ -161,17 +207,7 @@ export default function ResourceList() {
               <span aria-hidden="true">+</span>
               Add Resource
             </button>
-          ) : (
-            <button
-              type="button"
-              className="raise-ticket-btn"
-              onClick={handleGoToBooking}
-              disabled={!selectedResource}
-            >
-              <span aria-hidden="true">&#8594;</span>
-              Go to Booking
-            </button>
-          )}
+          ) : null}
 
           <div className="tickets-filter-list" role="group" aria-label="Filters">
             <select className="resource-filter-input" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
@@ -194,16 +230,15 @@ export default function ResourceList() {
 
             <input
               className="resource-filter-input"
-              type="text"
-              placeholder="Location"
-              value={locationFilter}
-              onChange={(e) => setLocationFilter(e.target.value)}
+              type="date"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
             />
 
             <button type="button" className="ticket-filter-btn active" onClick={handleSearch}>
               <span>Search</span>
             </button>
-            <button type="button" className="ticket-filter-btn" onClick={loadResources}>
+            <button type="button" className="ticket-filter-btn" onClick={handleClearFilters}>
               <span>Clear</span>
             </button>
           </div>
@@ -233,8 +268,8 @@ export default function ResourceList() {
                     <tr>
                       <th>Name</th>
                       <th>Type</th>
-                      <th>Capacity</th>
-                      <th>Location</th>
+                      {canManageResources && <th>Capacity</th>}
+                      {canManageResources && <th>Location</th>}
                       <th>Status</th>
                       {canManageResources && <th>Actions</th>}
                     </tr>
@@ -242,19 +277,19 @@ export default function ResourceList() {
                   <tbody>
                     {resources.length === 0 ? (
                       <tr>
-                        <td colSpan={canManageResources ? 6 : 5}>No resources available.</td>
+                        <td colSpan={canManageResources ? 6 : 3}>No resources available.</td>
                       </tr>
                     ) : (
                       resources.map((resource) => (
                         <tr
                           key={resource.id}
-                          onClick={() => !canManageResources && setSelectedResource(resource)}
+                          onClick={() => !canManageResources && handleStudentRowClick(resource)}
                           className={selectedResource?.id === resource.id ? "selected" : ""}
                         >
                           <td>{resource.name}</td>
                           <td>{resource.type}</td>
-                          <td>{resource.capacity}</td>
-                          <td>{resource.location}</td>
+                          {canManageResources && <td>{resource.capacity}</td>}
+                          {canManageResources && <td>{resource.location}</td>}
                           <td>
                             <span
                               className={
@@ -301,6 +336,73 @@ export default function ResourceList() {
           )}
         </div>
       </section>
+
+      {!canManageResources && showResourceDetails && selectedResource && (
+        <>
+          <div
+            className="modal-overlay"
+            onClick={() => setShowResourceDetails(false)}
+            aria-hidden="true"
+          ></div>
+          <div className="modal-container resource-detail-modal" role="dialog" aria-modal="true" aria-label="Resource details">
+            <div className="modal-header">
+              <h2>{selectedResource.name}</h2>
+              <button
+                type="button"
+                className="modal-close-btn"
+                onClick={() => setShowResourceDetails(false)}
+                aria-label="Close resource details"
+              >
+                x
+              </button>
+            </div>
+
+            <div className="resource-detail-modal-body">
+              <p className="resource-detail-modal-subtitle">{selectedResource.type}</p>
+
+              <div className="resource-detail-grid">
+                <div className="resource-detail-item">
+                  <span>Location</span>
+                  <strong>{selectedResource.location || "-"}</strong>
+                </div>
+                <div className="resource-detail-item">
+                  <span>Capacity</span>
+                  <strong>{selectedResource.capacity ?? "-"}</strong>
+                </div>
+                <div className="resource-detail-item">
+                  <span>Availability</span>
+                  <strong>
+                    {formatTime(selectedResource.availabilityStartTime)} - {formatTime(selectedResource.availabilityEndTime)}
+                  </strong>
+                </div>
+                <div className="resource-detail-item">
+                  <span>Date</span>
+                  <strong>{resolveResourceDate(selectedResource) || "-"}</strong>
+                </div>
+              </div>
+
+              {selectedResource.status === "OUT_OF_SERVICE" ? (
+                <button
+                  type="button"
+                  className="raise-ticket-btn resource-modal-booking-btn resource-modal-sorry-btn"
+                  disabled
+                >
+                  sorry its not available
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="raise-ticket-btn resource-modal-booking-btn"
+                  onClick={() => handleGoToBooking(selectedResource)}
+                >
+                  <span aria-hidden="true">&#8594;</span>
+                  Go to Booking
+                </button>
+              )}
+            </div>
+          </div>
+        </>
+      )}
 
       {canManageResources && showForm && (
         <div

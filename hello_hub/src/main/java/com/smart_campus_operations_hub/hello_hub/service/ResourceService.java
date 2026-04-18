@@ -9,6 +9,7 @@ import com.smart_campus_operations_hub.hello_hub.repository.ResourceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -19,6 +20,11 @@ public class ResourceService {
 
     public ResourceResponseDTO createResource(ResourceRequestDTO dto) {
         Resource resource = mapToEntity(dto);
+        Long nextId = resourceRepository.findTopByOrderByIdDesc()
+                .map(existing -> existing.getId() + 1)
+                .orElse(1L);
+        resource.setId(nextId);
+        resource.setCreatedAt(LocalDateTime.now());
         Resource savedResource = resourceRepository.save(resource);
         return mapToResponseDTO(savedResource);
     }
@@ -43,6 +49,7 @@ public class ResourceService {
         existingResource.setType(dto.getType());
         existingResource.setCapacity(dto.getCapacity());
         existingResource.setLocation(dto.getLocation());
+        existingResource.setResourceDate(dto.getResourceDate());
         existingResource.setAvailabilityStartTime(dto.getAvailabilityStartTime());
         existingResource.setAvailabilityEndTime(dto.getAvailabilityEndTime());
         existingResource.setStatus(dto.getStatus());
@@ -98,6 +105,7 @@ public class ResourceService {
                 .type(dto.getType())
                 .capacity(dto.getCapacity())
                 .location(dto.getLocation())
+                .resourceDate(dto.getResourceDate())
                 .availabilityStartTime(dto.getAvailabilityStartTime())
                 .availabilityEndTime(dto.getAvailabilityEndTime())
                 .status(dto.getStatus())
@@ -111,6 +119,7 @@ public class ResourceService {
                 .type(resource.getType())
                 .capacity(resource.getCapacity())
                 .location(resource.getLocation())
+                .resourceDate(resource.getResourceDate())
                 .availabilityStartTime(resource.getAvailabilityStartTime())
                 .availabilityEndTime(resource.getAvailabilityEndTime())
                 .status(resource.getStatus())
