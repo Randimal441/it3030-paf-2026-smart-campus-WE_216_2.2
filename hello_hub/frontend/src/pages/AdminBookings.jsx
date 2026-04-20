@@ -1,139 +1,161 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { getAllBookings, updateBookingStatus } from "../api/bookingService";
 
 export default function AdminBookings() {
   const [filter, setFilter] = useState("ALL");
-  const [bookings, setBookings] = useState([
-    {
-      id: 1,
-      user: "John Doe",
-      resource: "Conference Room A",
-      date: "2026-04-10",
-      startTime: "10:00",
-      endTime: "12:00",
-      status: "PENDING",
-      purpose: "Project Kick-off Meeting",
-      attendees: 10,
-    },
-    {
-      id: 2,
-      user: "Jane Smith",
-      resource: "Lab 101",
-      date: "2026-04-11",
-      startTime: "09:00",
-      endTime: "11:00",
-      status: "APPROVED",
-      purpose: "Practical Session",
-      attendees: 15,
-    },
-    {
-      id: 3,
-      user: "Mike Johnson",
-      resource: "Projector B",
-      date: "2026-04-12",
-      startTime: "14:00",
-      endTime: "15:00",
-      status: "REJECTED",
-      purpose: "Presentation",
-      attendees: 5,
-    },
-  ]);
-
+  const [bookings, setBookings] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [selectedBooking, setSelectedBooking] = useState(null);
+
   const [reason, setReason] = useState("");
 
-  const handleAction = (id, newStatus) => {
-    setBookings(bookings.map((b) => (b.id === id ? { ...b, status: newStatus, rejectionReason: reason } : b)));
-    setSelectedBooking(null);
-    setReason("");
+  useEffect(() => {
+    loadBookings();
+  }, []);
+
+  const loadBookings = async () => {
+    try {
+      setIsLoading(true);
+      const response = await getAllBookings();
+      setBookings(response.data || []);
+    } catch (err) {
+      setError("Failed to load bookings.");
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAction = async (id, newStatus) => {
+    try {
+      setError("");
+      setSuccessMessage("");
+      await updateBookingStatus(id, newStatus);
+      setSuccessMessage(`Booking ${newStatus.toLowerCase()} successfully!`);
+      setSelectedBooking(null);
+      setReason("");
+      await loadBookings();
+      setTimeout(() => setSuccessMessage(""), 3000);
+    } catch (err) {
+      setError("Failed to update booking status.");
+    }
   };
 
   const filteredBookings = bookings.filter((b) => filter === "ALL" || b.status === filter);
 
+  const getStatusStyles = (status) => {
+    switch (status) {
+      case "APPROVED": return { bg: "#e6f4ea", text: "#1e7e34" };
+      case "PENDING": return { bg: "#fff4e5", text: "#b45d00" };
+      case "REJECTED": return { bg: "#fce8e6", text: "#d93025" };
+      case "CANCELLED": return { bg: "#f1f3f4", text: "#5f6368" };
+      default: return { bg: "#f1f3f4", text: "#5f6368" };
+    }
+  };
+
   return (
-    <div className="page mesh-bg">
-      <div className="dashboard-shell">
-        <div className="dashboard-header" style={{ marginBottom: "20px" }}>
-          <div>
-            <h1>Admin Resource Bookings</h1>
-            <p>Review and manage all resource booking requests across the campus.</p>
-          </div>
-          <div className="user-nav-links" style={{ backgroundColor: "var(--glass)", padding: "10px", borderRadius: "12px", border: "1px solid var(--outline)" }}>
-            {["ALL", "PENDING", "APPROVED", "REJECTED"].map((f) => (
+    <div className="tickets-page">
+      <section className="tickets-hero">
+        <div className="tickets-hero-overlay"></div>
+        <div className="tickets-hero-content">
+          <h1>Admin Resource Bookings</h1>
+          <p>Review and manage all resource booking requests across the campus.</p>
+        </div>
+      </section>
+
+      <section className="tickets-content">
+        <aside className="tickets-sidebar">
+          <div className="tickets-filter-list" role="group" aria-label="Filters">
+            {["ALL", "PENDING", "APPROVED", "REJECTED", "CANCELLED"].map((f) => (
               <button
                 key={f}
-                className={`user-nav-link ${filter === f ? "active" : ""}`}
+                type="button"
+                className={`ticket-filter-btn ${filter === f ? "active" : ""}`}
                 onClick={() => setFilter(f)}
-                style={{ fontSize: "12px" }}
               >
-                {f}
+                <span>{f}</span>
               </button>
             ))}
           </div>
-        </div>
+        </aside>
 
-        <div className="glass-card" style={{ width: "100%" }}>
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ textAlign: "left", borderBottom: "1px solid var(--outline)" }}>
-                  <th style={{ padding: "12px" }}>User</th>
-                  <th style={{ padding: "12px" }}>Resource</th>
-                  <th style={{ padding: "12px" }}>Time Slot</th>
-                  <th style={{ padding: "12px" }}>Status</th>
-                  <th style={{ padding: "12px", textAlign: "right" }}>Review</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredBookings.map((booking) => (
-                  <tr key={booking.id} style={{ borderBottom: "1px solid var(--outline)" }}>
-                    <td style={{ padding: "12px" }}>
-                      <strong>{booking.user}</strong>
-                    </td>
-                    <td style={{ padding: "12px" }}>{booking.resource}</td>
-                    <td style={{ padding: "12px" }}>
-                      {booking.date} {booking.startTime} - {booking.endTime}
-                    </td>
-                    <td style={{ padding: "12px" }}>
-                      <span
-                        className={`badge ${booking.status.toLowerCase()}`}
-                        style={{
-                          padding: "4px 8px",
-                          borderRadius: "6px",
-                          fontSize: "12px",
-                          fontWeight: "bold",
-                          backgroundColor:
-                            booking.status === "APPROVED"
-                              ? "#e6f4ea"
-                              : booking.status === "PENDING"
-                              ? "#fff4e5"
-                              : "#fce8e6",
-                          color:
-                            booking.status === "APPROVED"
-                              ? "#1e7e34"
-                              : booking.status === "PENDING"
-                              ? "#b45d00"
-                              : "#d93025",
-                        }}
-                      >
-                        {booking.status}
-                      </span>
-                    </td>
-                    <td style={{ padding: "12px", textAlign: "right" }}>
-                      {booking.status === "PENDING" ? (
-                        <button className="cta-btn" style={{ padding: "6px 12px", fontSize: "13px" }} onClick={() => setSelectedBooking(booking)}>
-                          Review
-                        </button>
-                      ) : (
-                        <span style={{ color: "var(--muted)", fontSize: "13px" }}>Finalized</span>
-                      )}
-                    </td>
+        <div className="tickets-main">
+          <header className="tickets-main-header">
+            <div>
+              <h2>Booking Requests</h2>
+              <span>{isLoading ? "Loading..." : `${filteredBookings.length} shown`}</span>
+            </div>
+          </header>
+
+          {error && <div className="ticket-card" style={{ color: '#d93025', padding: '16px', marginBottom: '16px' }}>{error}</div>}
+          {successMessage && <div className="ticket-card" style={{ color: '#1e7e34', backgroundColor: '#e6f4ea', border: '1px solid #1e7e34', padding: '16px', marginBottom: '16px' }}>{successMessage}</div>}
+
+          <div className="ticket-card resources-table-card">
+            <div className="resources-table-wrap">
+              <table className="resources-table">
+                <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>Resource</th>
+                    <th>Time Slot</th>
+                    <th>Status</th>
+                    <th style={{ textAlign: 'right' }}>Review</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {isLoading ? (
+                    <tr><td colSpan="5" style={{ padding: "24px", textAlign: "center" }}>Loading mappings...</td></tr>
+                  ) : filteredBookings.length === 0 ? (
+                    <tr><td colSpan="5" style={{ padding: "24px", textAlign: "center" }}>No bookings match this filter.</td></tr>
+                  ) : (
+                    filteredBookings.map((booking) => (
+                      <tr key={booking.id}>
+                        <td>
+                          <strong>{booking.requesterEmail}</strong>
+                          <div style={{ fontSize: '11px', color: 'var(--muted)' }}>{booking.requesterRole}</div>
+                        </td>
+                        <td>{booking.resourceName}</td>
+                        <td>
+                          {booking.bookingDate} <br />
+                          <span style={{ fontSize: '12px' }}>{booking.startTime?.slice(0, 5)} - {booking.endTime?.slice(0, 5)}</span>
+                        </td>
+                        <td>
+                          <span
+                            className="status-badge-active"
+                            style={{
+                              ...getStatusStyles(booking.status),
+                              padding: "4px 12px",
+                              borderRadius: "999px",
+                              fontSize: "12px",
+                              fontWeight: "700",
+                              display: "inline-block",
+                              backgroundColor: getStatusStyles(booking.status).bg,
+                              color: getStatusStyles(booking.status).text,
+                            }}
+                          >
+                            {booking.status}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: 'right' }}>
+                          {booking.status === "PENDING" ? (
+                            <button className="user-nav-link" style={{ color: "var(--accent)" }} onClick={() => setSelectedBooking(booking)}>
+                              Review
+                            </button>
+                          ) : (
+                            <span style={{ color: "var(--muted)", fontSize: "12px" }}>Finalized</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
       {selectedBooking && (
         <div
@@ -148,11 +170,11 @@ export default function AdminBookings() {
             backdropFilter: "blur(4px)",
           }}
         >
-          <div className="glass-card" style={{ maxWidth: "500px" }}>
+          <div className="glass-card" style={{ maxWidth: "500px", width: '100%' }}>
             <h2>Review Booking Request</h2>
             <div style={{ marginTop: "16px", marginBottom: "16px" }}>
-              <p>Requested by: <strong>{selectedBooking.user}</strong></p>
-              <p>Target Resource: <strong>{selectedBooking.resource}</strong></p>
+              <p>Requested by: <strong>{selectedBooking.requesterEmail}</strong></p>
+              <p>Target Resource: <strong>{selectedBooking.resourceName}</strong></p>
               <p>Purpose: {selectedBooking.purpose}</p>
               <p>Attendees: {selectedBooking.attendees || "N/A"}</p>
             </div>
@@ -171,14 +193,14 @@ export default function AdminBookings() {
                 style={{ flex: 1 }} 
                 onClick={() => handleAction(selectedBooking.id, "APPROVED")}
               >
-                Approve Request
+                Approve
               </button>
               <button 
                 className="cta-btn" 
                 style={{ flex: 1, backgroundColor: "#d93025", backgroundImage: "none" }} 
                 onClick={() => handleAction(selectedBooking.id, "REJECTED")}
               >
-                Reject Request
+                Reject
               </button>
               <button 
                 type="button" 
