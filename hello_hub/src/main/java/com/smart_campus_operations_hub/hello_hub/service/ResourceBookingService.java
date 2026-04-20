@@ -14,6 +14,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 public class ResourceBookingService {
@@ -56,6 +59,40 @@ public class ResourceBookingService {
 
         ResourceBooking saved = resourceBookingRepository.save(booking);
         return mapToResponse(saved);
+    }
+
+    public List<ResourceBookingResponseDTO> getAllBookings() {
+        return resourceBookingRepository.findAll().stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<ResourceBookingResponseDTO> getBookingsByRequester(String email) {
+        return resourceBookingRepository.findByRequesterEmail(email).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    public ResourceBookingResponseDTO updateBookingStatus(Long id, BookingStatus status) {
+        ResourceBooking booking = resourceBookingRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + id));
+        booking.setStatus(status);
+        return mapToResponse(resourceBookingRepository.save(booking));
+    }
+
+    public void deleteBooking(Long id, Authentication authentication) {
+        ResourceBooking booking = resourceBookingRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + id));
+        
+        // Only the requester or an admin can delete/cancel a booking
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        
+        if (!isAdmin && !booking.getRequesterEmail().equals(authentication.getName())) {
+            throw new BadRequestException("You are not authorized to cancel this booking.");
+        }
+
+        resourceBookingRepository.delete(booking);
     }
 
     private ResourceBookingResponseDTO mapToResponse(ResourceBooking booking) {
