@@ -56,10 +56,38 @@ export default function AdminBookings() {
   };
 
   return (
-    <div className="tickets-page">
-      <section className="tickets-hero">
+    <div className="tickets-page mesh-bg">
+      <section className="tickets-hero" style={{ overflow: "hidden" }}>
         <div className="tickets-hero-overlay"></div>
-        <div className="tickets-hero-content">
+        {/* Decorative Square Background */}
+        <div style={{ 
+          position: "absolute", 
+          width: "350px", 
+          height: "350px", 
+          background: "rgba(255, 255, 255, 0.04)", 
+          border: "1px solid rgba(255, 255, 255, 0.08)", 
+          borderRadius: "32px", 
+          top: "-100px", 
+          right: "10%", 
+          transform: "rotate(15deg)", 
+          pointerEvents: "none",
+          zIndex: 1
+        }}></div>
+        <div style={{ 
+          position: "absolute", 
+          width: "200px", 
+          height: "200px", 
+          background: "rgba(255, 255, 255, 0.02)", 
+          border: "1px solid rgba(255, 255, 255, 0.05)", 
+          borderRadius: "24px", 
+          bottom: "-50px", 
+          left: "5%", 
+          transform: "rotate(-10deg)", 
+          pointerEvents: "none",
+          zIndex: 1
+        }}></div>
+
+        <div className="tickets-hero-content" style={{ position: "relative", zIndex: 2 }}>
           <h1>Admin Resource Bookings</h1>
           <p>Review and manage all resource booking requests across the campus.</p>
         </div>
