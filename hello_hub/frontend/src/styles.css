@@ -928,6 +928,22 @@ p {
   font-weight: 700;
 }
 
+.resource-catalogue-header {
+  justify-content: space-between;
+  width: 100%;
+}
+
+.resource-catalogue-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.resource-catalogue-header .favorite-list-trigger {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
 .resource-filter-input {
   width: 100%;
   border: 1px solid #d5dfef;
@@ -1066,6 +1082,119 @@ p {
   display: flex;
   gap: 6px;
   align-items: center;
+}
+
+.favorite-toggle-btn {
+  border: 1px solid #d9e1ef;
+  border-radius: 999px;
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
+  color: #7a889f;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 2px rgba(23, 43, 77, 0.08);
+  transition: border-color 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.favorite-toggle-btn:hover {
+  border-color: #7ea2df;
+  color: #2f61b9;
+  transform: scale(1.05);
+  box-shadow: 0 4px 10px rgba(47, 97, 185, 0.2);
+}
+
+.favorite-toggle-btn.active {
+  background: linear-gradient(180deg, #eef4ff 0%, #dde9ff 100%);
+  border-color: #9db8e7;
+  color: #2f61b9;
+}
+
+.favorite-toggle-btn svg {
+  width: 18px;
+  height: 18px;
+  fill: transparent;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+.favorite-toggle-btn.active svg {
+  fill: currentColor;
+}
+
+.resource-detail-favorite-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+.favorite-list-trigger {
+  border: 1px solid #a9c0e8;
+  border-radius: 999px;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(180deg, #eef4ff 0%, #dfeafe 100%);
+  color: #2f61b9;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(47, 97, 185, 0.18);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.favorite-list-trigger:hover {
+  border-color: #7ea2df;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(47, 97, 185, 0.24);
+}
+
+.favorite-list-trigger svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.favorite-resource-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.favorite-resource-item {
+  width: 100%;
+  border: 1px solid #dfe5f1;
+  border-radius: 12px;
+  background: #fbfdff;
+  color: #243a5e;
+  text-align: left;
+  padding: 10px 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.favorite-resource-item:hover {
+  border-color: #9cb4df;
+  background: #f3f8ff;
+}
+
+.favorite-resource-item span {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.favorite-resource-item small {
+  font-size: 12px;
+  color: #6b7d99;
 }
 
 .tickets-card-list {
