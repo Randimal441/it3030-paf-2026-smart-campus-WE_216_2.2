@@ -1,9 +1,53 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { getMyBookings } from "../api/bookingService";
+import api from "../api/axiosClient";
 
 export default function UserHome() {
   const { user } = useAuth();
+  const [stats, setStats] = useState({ activeBookings: 0, resolvedTickets: 0 });
+  const [activities, setActivities] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [bookingsRes, ticketsRes] = await Promise.all([
+          getMyBookings(),
+          api.get("/api/tickets/my-tickets")
+        ]);
+
+        const myBookings = bookingsRes.data || [];
+        const myTickets = ticketsRes.data || [];
+
+        const activeBookings = myBookings.filter(b => b.status === "PENDING" || b.status === "APPROVED").length;
+        const resolvedTickets = myTickets.filter(t => t.status === "RESOLVED" || t.status === "CLOSED").length;
+
+        setStats({ activeBookings, resolvedTickets });
+
+        const recentActivities = [];
+        if (myBookings.length > 0) {
+          recentActivities.push({
+            title: `${myBookings[0].resourceName} Booking`,
+            status: myBookings[0].status,
+            color: "var(--accent)"
+          });
+        }
+        if (myTickets.length > 0) {
+          recentActivities.push({
+            title: myTickets[0].title,
+            status: myTickets[0].status,
+            color: "#2f61b9"
+          });
+        }
+        setActivities(recentActivities.slice(0, 2));
+
+      } catch (err) {
+        console.error("Error fetching home stats:", err);
+      }
+    };
+    fetchData();
+  }, []);
 
   const services = [
     {
@@ -79,24 +123,24 @@ export default function UserHome() {
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                   <div style={{ background: "#fff", padding: "16px", borderRadius: "16px", border: "1px solid var(--outline)" }}>
                     <div style={{ color: "var(--accent)", marginBottom: "8px" }}>● Active</div>
-                    <div style={{ fontSize: "24px", fontWeight: "700" }}>1,240</div>
-                    <div style={{ fontSize: "12px", color: "var(--muted)" }}>Monthly Bookings</div>
+                    <div style={{ fontSize: "24px", fontWeight: "700" }}>{stats.activeBookings}</div>
+                    <div style={{ fontSize: "12px", color: "var(--muted)" }}>Active Bookings</div>
                   </div>
                   <div style={{ background: "#fff", padding: "16px", borderRadius: "16px", border: "1px solid var(--outline)" }}>
                     <div style={{ color: "#2f61b9", marginBottom: "8px" }}>● Resolved</div>
-                    <div style={{ fontSize: "24px", fontWeight: "700" }}>98%</div>
-                    <div style={{ fontSize: "12px", color: "var(--muted)" }}>Incident Repairs</div>
+                    <div style={{ fontSize: "24px", fontWeight: "700" }}>{stats.resolvedTickets}</div>
+                    <div style={{ fontSize: "12px", color: "var(--muted)" }}>Resolved Repairs</div>
                   </div>
                   <div style={{ gridColumn: "span 2", background: "#f8fbff", padding: "16px", borderRadius: "16px", border: "1px solid var(--outline)" }}>
                     <div style={{ fontSize: "13px", fontWeight: "600", marginBottom: "8px" }}>Recent Activity</div>
-                    <div style={{ fontSize: "12px", display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
-                      <span>Room 302 Booking</span>
-                      <span style={{ color: "var(--accent)" }}>+2m ago</span>
-                    </div>
-                    <div style={{ fontSize: "12px", display: "flex", justifyContent: "space-between" }}>
-                      <span>Projector Fault #402</span>
-                      <span style={{ color: "#2f61b9" }}>Resolved</span>
-                    </div>
+                    {activities.length > 0 ? activities.map((act, idx) => (
+                      <div key={idx} style={{ fontSize: "12px", display: "flex", justifyContent: "space-between", marginBottom: idx === 0 ? "4px" : "0" }}>
+                        <span>{act.title}</span>
+                        <span style={{ color: act.color }}>{act.status}</span>
+                      </div>
+                    )) : (
+                      <div style={{ fontSize: "12px", color: "var(--muted)" }}>No recent activity to show.</div>
+                    )}
                   </div>
                 </div>
               </div>
