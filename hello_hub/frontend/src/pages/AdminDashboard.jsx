@@ -1,8 +1,39 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { getAllBookings } from "../api/bookingService";
+import { getAllResources } from "../api/resourceService";
 import api from "../api/axiosClient";
 
 export default function AdminDashboard() {
+  const [statsData, setStatsData] = useState({
+    activeBookings: 0,
+    faultReports: 0,
+    notifications: 0,
+    resourceCount: 0
+  });
+
+  useEffect(() => {
+    const fetchAdminStats = async () => {
+      try {
+        const [bookingsRes, resourcesRes, ticketsRes] = await Promise.all([
+          getAllBookings(),
+          getAllResources(),
+          api.get("/api/tickets/my-tickets") // Note: This might need an admin-all-tickets endpoint
+        ]);
+
+        setStatsData({
+          activeBookings: (bookingsRes.data || []).filter(b => b.status === "PENDING" || b.status === "APPROVED").length,
+          faultReports: (ticketsRes.data || []).length, // placeholder, ideally all tickets
+          notifications: 0,
+          resourceCount: (resourcesRes.data || []).length
+        });
+      } catch (err) {
+        console.error("Error fetching admin dashboard stats:", err);
+      }
+    };
+    fetchAdminStats();
+  }, []);
+
   const loadUsers = async () => {
     try {
       const res = await api.get("/api/admin/users");
@@ -13,10 +44,10 @@ export default function AdminDashboard() {
   };
 
   const adminStats = [
-    { name: "Active Bookings", value: "24", icon: "📅", link: "/admin/bookings" },
-    { name: "Fault Reports", value: "8", icon: "🎫", link: "/admin/tickets" },
-    { name: "System Notifications", value: "12", icon: "🔔", link: "/admin/notifications" },
-    { name: "Resource Catalogue", value: "45", icon: "🏢", link: "/admin/resources" },
+    { name: "Active Bookings", value: statsData.activeBookings.toString(), icon: "📅", link: "/admin/bookings" },
+    { name: "Fault Reports", value: statsData.faultReports.toString(), icon: "🎫", link: "/admin/tickets" },
+    { name: "System Notifications", value: statsData.notifications.toString(), icon: "🔔", link: "/admin/notifications" },
+    { name: "Resource Catalogue", value: statsData.resourceCount.toString(), icon: "🏢", link: "/admin/resources" },
   ];
 
   return (
