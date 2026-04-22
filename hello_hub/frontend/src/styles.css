@@ -172,6 +172,25 @@ body {
   max-width: 360px;
 }
 
+.auth-switch {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  color: #5b6a86;
+}
+
+.auth-switch-link {
+  font-weight: 700;
+  color: #2f61d3;
+  text-decoration: none;
+}
+
+.auth-switch-link:hover {
+  text-decoration: underline;
+}
+
 .password-field {
   position: relative;
   display: flex;

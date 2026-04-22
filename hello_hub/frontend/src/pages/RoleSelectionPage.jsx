@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../api/axiosClient";
 import { useAuth } from "../context/AuthContext";
 
-const roles = ["STUDENT", "LECTURER", "TECHNICIAN", "ADMIN"];
+const roles = ["STUDENT", "LECTURER", "TECHNICIAN"];
 
 export default function RoleSelectionPage() {
   const navigate = useNavigate();
