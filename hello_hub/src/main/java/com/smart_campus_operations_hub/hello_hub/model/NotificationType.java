@@ -1,0 +1,17 @@
+package com.smart_campus_operations_hub.hello_hub.model;
+
+public enum NotificationType {
+    TICKET_CREATED,
+    TICKET_ASSIGNED,
+    TICKET_REJECTED,
+    TICKET_RESOLVED,
+    TICKET_CLOSED,
+    BOOKING_CREATED,
+    BOOKING_APPROVED,
+    BOOKING_REJECTED,
+    BOOKING_CANCELLED,
+    COMMENT_ADDED,
+    RESOURCE_CREATED,
+    RESOURCE_UPDATED,
+    RESOURCE_DELETED
+}

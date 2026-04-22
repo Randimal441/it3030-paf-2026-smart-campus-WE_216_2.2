@@ -98,10 +98,19 @@ export default function ResourceList() {
       return;
     }
 
-    // Navigate to user bookings page with selected resource
+    // Navigate to user bookings page with selected resource and its availability details
     const role = user?.role?.toLowerCase() || "student";
     const path = role === "admin" ? "/admin/bookings" : `/${role}/bookings`;
-    navigate(path, { state: { selectedResource: resource.id, resourceName: resource.name } });
+    
+    navigate(path, { 
+      state: { 
+        selectedResource: resource.id, 
+        resourceName: resource.name,
+        startTime: resource.availabilityStartTime?.slice(0, 5),
+        endTime: resource.availabilityEndTime?.slice(0, 5),
+        date: resolveResourceDate(resource)
+      } 
+    });
   };
 
   const handleStudentRowClick = (resource) => {

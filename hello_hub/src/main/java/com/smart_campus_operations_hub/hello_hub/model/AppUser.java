@@ -27,5 +27,7 @@ public class AppUser {
 
     private AuthProvider provider;
 
+    private String passwordHash;
+
     private Instant createdAt;
 }

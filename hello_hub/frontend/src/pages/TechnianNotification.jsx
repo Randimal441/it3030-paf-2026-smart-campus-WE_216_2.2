@@ -1,9 +1,11 @@
-import React from 'react'
+import NotificationCenter from "../components/NotificationCenter";
 
 export default function TechnianNotification() {
   return (
-    <div>
-      This is the Technician Notification page. You can add content here to manage notifications for the technician panel.
-    </div>
-  )
+    <NotificationCenter
+      title="Technician Notifications"
+      subtitle="Keep up with new assignments, comments, and ticket workflow changes."
+      emptyText="No technician notifications to display."
+    />
+  );
 }
