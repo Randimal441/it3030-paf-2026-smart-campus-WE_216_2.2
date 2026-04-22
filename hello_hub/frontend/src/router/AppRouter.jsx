@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import AdminDashboard from "../pages/AdminDashboard";
 import AuthCallbackPage from "../pages/AuthCallbackPage";
 import LoginPage from "../pages/LoginPage";
+import SignupPage from "../pages/SignupPage";
 import RoleSelectionPage from "../pages/RoleSelectionPage";
 import UnauthorizedPage from "../pages/UnauthorizedPage";
 import Userbookings from "../pages/Userbookings";
@@ -41,6 +42,7 @@ export default function AppRouter() {
     <Routes>
       <Route path="/" element={<RootRedirect />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignupPage />} />
       <Route path="/auth/callback" element={<AuthCallbackPage />} />
       <Route path="/select-role" element={<RoleSelectionPage />} />
       <Route path="/unauthorized" element={<UnauthorizedPage />} />

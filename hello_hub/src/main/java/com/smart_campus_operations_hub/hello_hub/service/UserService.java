@@ -6,7 +6,10 @@ import com.smart_campus_operations_hub.hello_hub.model.AuthProvider;
 import com.smart_campus_operations_hub.hello_hub.model.UserRole;
 import com.smart_campus_operations_hub.hello_hub.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.List;
@@ -17,6 +20,7 @@ import java.util.Objects;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public AppUser findOrCreateGoogleUser(String name, String email) {
         var existingUser = userRepository.findByEmail(email);
@@ -33,6 +37,38 @@ public class UserService {
                 .build();
 
         return Objects.requireNonNull(userRepository.save(newUser));
+    }
+
+    public AppUser registerLocalUser(String name, String email, String rawPassword) {
+        if (userRepository.findByEmail(email).isPresent()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email is already registered.");
+        }
+
+        AppUser newUser = AppUser.builder()
+                .name(name)
+                .email(email)
+                .provider(AuthProvider.LOCAL)
+                .passwordHash(passwordEncoder.encode(rawPassword))
+                .role(null)
+                .createdAt(Instant.now())
+                .build();
+
+        return Objects.requireNonNull(userRepository.save(newUser));
+    }
+
+    public AppUser authenticateLocalUser(String email, String rawPassword) {
+        AppUser user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials."));
+
+        if (user.getPasswordHash() == null || user.getProvider() != AuthProvider.LOCAL) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials.");
+        }
+
+        if (!passwordEncoder.matches(rawPassword, user.getPasswordHash())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials.");
+        }
+
+        return user;
     }
 
     public AppUser getByEmail(String email) {
