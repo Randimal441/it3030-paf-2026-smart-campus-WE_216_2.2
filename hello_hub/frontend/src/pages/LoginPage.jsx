@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import loginVisual from "../assets/login-card-photo.png";
 import { loginWithEmail } from "../api/authService";
 
 export default function LoginPage() {
@@ -144,7 +145,7 @@ export default function LoginPage() {
         <div className="login-visual-column" aria-hidden="true">
           <img
             className="login-visual-image"
-            src="/login-card-photo.png"
+            src={loginVisual}
             alt=""
             loading="eager"
             decoding="async"

@@ -1,6 +1,7 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import NotificationBell from "./NotificationBell";
 
 export default function TechnicianNavbar({ activeMenu }) {
   const navigate = useNavigate();
@@ -56,17 +57,10 @@ export default function TechnicianNavbar({ activeMenu }) {
             <path d="M10.5 4a6.5 6.5 0 014.99 10.67l4.42 4.42-1.41 1.41-4.42-4.42A6.5 6.5 0 1110.5 4zm0 2a4.5 4.5 0 100 9 4.5 4.5 0 000-9z" />
           </svg>
         </button>
-        <button
-          type="button"
-          className={`icon-btn${resolvedActiveMenu === "notifications" ? " active" : ""}`}
-          aria-label="Notifications"
-          onClick={() => goTo("/notifications")}
-        >
-          <svg viewBox="0 0 24 24" role="img">
-            <path d="M12 3a5 5 0 00-5 5v2.18c0 .74-.2 1.46-.57 2.1L5 15v1h14v-1l-1.43-2.72a4.5 4.5 0 01-.57-2.1V8a5 5 0 00-5-5zm0 19a2.5 2.5 0 002.45-2h-4.9A2.5 2.5 0 0012 22z" />
-          </svg>
-          <span className="icon-dot" aria-hidden="true"></span>
-        </button>
+        <NotificationBell
+          active={resolvedActiveMenu === "notifications"}
+          notificationsPath="/technician/notifications"
+        />
         <button type="button" className="icon-btn" aria-label="Profile">
           <svg viewBox="0 0 24 24" role="img">
             <path d="M12 12a4 4 0 100-8 4 4 0 000 8zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z" />
