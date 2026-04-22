@@ -36,29 +36,30 @@ public class NotificationServiceImpl implements NotificationService {
         if (recipientEmail == null || recipientEmail.isBlank()) {
             return;
         }
-
+        String normalizedEmail = recipientEmail.trim();
+        AppUser recipient = null;
         try {
-            AppUser recipient = userService.getByEmail(recipientEmail);
-
-            LocalDateTime now = LocalDateTime.now();
-            Notification notification = Notification.builder()
-                    .recipientEmail(recipientEmail)
-                    .recipientRole(recipient.getRole())
-                    .type(type)
-                    .title(title)
-                    .message(message)
-                    .relatedEntityId(relatedEntityId)
-                    .relatedEntityType(relatedEntityType)
-                    .actionUrl(actionUrl)
-                    .isRead(false)
-                    .createdAt(now)
-                    .updatedAt(now)
-                    .build();
-
-            notificationRepository.save(notification);
+            recipient = userService.getByEmail(normalizedEmail);
         } catch (RuntimeException ex) {
-            log.warn("Skipping notification for {} due to: {}", recipientEmail, ex.getMessage());
+            log.warn("Saving notification without user lookup for {} due to: {}", normalizedEmail, ex.getMessage());
         }
+
+        LocalDateTime now = LocalDateTime.now();
+        Notification notification = Notification.builder()
+                .recipientEmail(normalizedEmail)
+                .recipientRole(recipient != null ? recipient.getRole() : null)
+                .type(type)
+                .title(title)
+                .message(message)
+                .relatedEntityId(relatedEntityId)
+                .relatedEntityType(relatedEntityType)
+                .actionUrl(actionUrl)
+                .isRead(false)
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
+
+        notificationRepository.save(notification);
     }
 
     @Override
