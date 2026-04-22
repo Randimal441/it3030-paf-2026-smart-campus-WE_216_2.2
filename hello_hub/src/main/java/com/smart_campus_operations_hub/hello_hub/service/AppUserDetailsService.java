@@ -21,13 +21,15 @@ public class AppUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         AppUser user = userService.getByEmail(username);
 
+        String password = user.getPasswordHash() == null ? "N/A" : user.getPasswordHash();
+
         if (user.getRole() == null) {
-            return new User(user.getEmail(), "N/A", Collections.emptyList());
+            return new User(user.getEmail(), password, Collections.emptyList());
         }
 
         return new User(
                 user.getEmail(),
-                "N/A",
+                password,
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
         );
     }

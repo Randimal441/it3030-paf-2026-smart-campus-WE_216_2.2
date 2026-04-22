@@ -46,7 +46,9 @@ public class SecurityConfig {
                         .accessDeniedHandler(restAccessDeniedHandler)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/error", "/oauth2/**", "/login/**", "/api/public/**").permitAll()
+                    .requestMatchers("/", "/error", "/oauth2/**", "/login/**", "/api/public/**").permitAll()
+                    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/resources/**").hasAnyRole("ADMIN", "STUDENT", "LECTURER", "TECHNICIAN")
                     .requestMatchers(HttpMethod.POST, "/api/resources").hasRole("ADMIN")
                     .requestMatchers(HttpMethod.PUT, "/api/resources/**").hasRole("ADMIN")
@@ -81,4 +83,5 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
 }
