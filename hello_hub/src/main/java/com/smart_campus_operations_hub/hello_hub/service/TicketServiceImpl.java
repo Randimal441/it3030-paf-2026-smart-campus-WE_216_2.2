@@ -4,6 +4,7 @@ import com.smart_campus_operations_hub.hello_hub.dto.TechnicianDTO;
 import com.smart_campus_operations_hub.hello_hub.dto.TicketRequestDTO;
 import com.smart_campus_operations_hub.hello_hub.dto.TicketResponseDTO;
 import com.smart_campus_operations_hub.hello_hub.model.AppUser;
+import com.smart_campus_operations_hub.hello_hub.model.NotificationType;
 import com.smart_campus_operations_hub.hello_hub.model.Ticket;
 import com.smart_campus_operations_hub.hello_hub.model.UserRole;
 import com.smart_campus_operations_hub.hello_hub.repository.TicketRepository;
@@ -20,6 +21,7 @@ public class TicketServiceImpl implements TicketServise {
 
     private final TicketRepository ticketRepository;
     private final UserService userService;
+    private final NotificationService notificationService;
 
     @Override
     public Ticket createTicket(TicketRequestDTO dto, String email) {
@@ -54,7 +56,33 @@ public class TicketServiceImpl implements TicketServise {
                 .imageUrls(dto.getImageUrls())
                 .build();
 
-        return ticketRepository.save(ticket);
+        Ticket savedTicket = ticketRepository.save(ticket);
+
+        List<String> adminEmails = userService.getUsersByRole(UserRole.ADMIN).stream()
+            .map(AppUser::getEmail)
+            .toList();
+
+        notificationService.createNotificationForUsers(
+            adminEmails,
+            NotificationType.TICKET_CREATED,
+            "New Ticket Submitted",
+            user.getName() + " submitted ticket: " + savedTicket.getTitle(),
+            savedTicket.getId(),
+            "TICKET",
+            "/admin/tickets"
+        );
+
+        notificationService.createNotificationForUser(
+            savedTicket.getCreatedByEmail(),
+            NotificationType.TICKET_CREATED,
+            "Ticket Created",
+            "Your ticket was created successfully: " + savedTicket.getTitle(),
+            savedTicket.getId(),
+            "TICKET",
+            user.getRole() == UserRole.LECTURER ? "/lecturer/tickets" : "/student/tickets"
+        );
+
+        return savedTicket;
     }
     
 
@@ -112,7 +140,34 @@ public class TicketServiceImpl implements TicketServise {
     
     ticket.setStatus("IN_PROGRESS");
 
-    return ticketRepository.save(ticket);
+    Ticket savedTicket = ticketRepository.save(ticket);
+
+    notificationService.createNotificationForUser(
+            technician.getEmail(),
+            NotificationType.TICKET_ASSIGNED,
+            "Ticket Assigned",
+            "You have been assigned: " + savedTicket.getTitle(),
+            savedTicket.getId(),
+            "TICKET",
+            "/technician/tickets"
+    );
+
+    if (savedTicket.getCreatedByEmail() != null && !savedTicket.getCreatedByEmail().isBlank()) {
+        AppUser creator = userService.getByEmail(savedTicket.getCreatedByEmail());
+        String creatorPath = creator.getRole() == UserRole.LECTURER ? "/lecturer/tickets" : "/student/tickets";
+
+        notificationService.createNotificationForUser(
+                savedTicket.getCreatedByEmail(),
+                NotificationType.TICKET_ASSIGNED,
+                "Technician Assigned",
+                "A technician was assigned to your ticket: " + savedTicket.getTitle(),
+                savedTicket.getId(),
+                "TICKET",
+                creatorPath
+        );
+    }
+
+    return savedTicket;
 }
 
     @Override
@@ -208,7 +263,36 @@ public class TicketServiceImpl implements TicketServise {
     ticket.setStatus("REJECTED");
     ticket.setRejectionReason(reason);
 
-    return ticketRepository.save(ticket);
+    Ticket savedTicket = ticketRepository.save(ticket);
+
+    if (savedTicket.getCreatedByEmail() != null && !savedTicket.getCreatedByEmail().isBlank()) {
+        AppUser creator = userService.getByEmail(savedTicket.getCreatedByEmail());
+        String creatorPath = creator.getRole() == UserRole.LECTURER ? "/lecturer/tickets" : "/student/tickets";
+
+        notificationService.createNotificationForUser(
+                savedTicket.getCreatedByEmail(),
+                NotificationType.TICKET_REJECTED,
+                "Ticket Rejected",
+                "Your ticket was rejected. Reason: " + reason,
+                savedTicket.getId(),
+                "TICKET",
+                creatorPath
+        );
+    }
+
+    if (savedTicket.getAssignedTechnicianEmail() != null && !savedTicket.getAssignedTechnicianEmail().isBlank()) {
+        notificationService.createNotificationForUser(
+                savedTicket.getAssignedTechnicianEmail(),
+                NotificationType.TICKET_REJECTED,
+                "Assigned Ticket Rejected",
+                "Ticket was rejected by admin: " + savedTicket.getTitle(),
+                savedTicket.getId(),
+                "TICKET",
+                "/technician/tickets"
+        );
+    }
+
+    return savedTicket;
     }
 
 
@@ -266,10 +350,41 @@ public class TicketServiceImpl implements TicketServise {
         throw new RuntimeException("You are not assigned to this ticket");
     }
 
-    ticket.setStatus("RESOLVED");
-    ticket.setResolutionNote(note);
+        ticket.setStatus("RESOLVED");
+        ticket.setResolutionNote(note);
 
-    return ticketRepository.save(ticket);
+        Ticket savedTicket = ticketRepository.save(ticket);
+
+        if (savedTicket.getCreatedByEmail() != null && !savedTicket.getCreatedByEmail().isBlank()) {
+        AppUser creator = userService.getByEmail(savedTicket.getCreatedByEmail());
+        String creatorPath = creator.getRole() == UserRole.LECTURER ? "/lecturer/tickets" : "/student/tickets";
+
+        notificationService.createNotificationForUser(
+            savedTicket.getCreatedByEmail(),
+            NotificationType.TICKET_RESOLVED,
+            "Ticket Resolved",
+            "Your ticket was resolved: " + savedTicket.getTitle(),
+            savedTicket.getId(),
+            "TICKET",
+            creatorPath
+        );
+        }
+
+        List<String> adminEmails = userService.getUsersByRole(UserRole.ADMIN).stream()
+            .map(AppUser::getEmail)
+            .toList();
+
+        notificationService.createNotificationForUsers(
+            adminEmails,
+            NotificationType.TICKET_RESOLVED,
+            "Ticket Resolved",
+            "Technician resolved ticket: " + savedTicket.getTitle(),
+            savedTicket.getId(),
+            "TICKET",
+            "/admin/tickets"
+        );
+
+        return savedTicket;
     }
 
     
@@ -295,6 +410,45 @@ public class TicketServiceImpl implements TicketServise {
     // Update status
     ticket.setStatus("CLOSED");
 
-    return ticketRepository.save(ticket);
+    Ticket savedTicket = ticketRepository.save(ticket);
+
+    if (savedTicket.getCreatedByEmail() != null && !savedTicket.getCreatedByEmail().isBlank()) {
+        AppUser creator = userService.getByEmail(savedTicket.getCreatedByEmail());
+        String creatorPath = creator.getRole() == UserRole.LECTURER ? "/lecturer/tickets" : "/student/tickets";
+
+        notificationService.createNotificationForUser(
+                savedTicket.getCreatedByEmail(),
+                NotificationType.TICKET_CLOSED,
+                "Ticket Closed",
+                "Your ticket was closed by admin: " + savedTicket.getTitle(),
+                savedTicket.getId(),
+                "TICKET",
+                creatorPath
+        );
+    }
+
+        if (savedTicket.getAssignedTechnicianEmail() != null && !savedTicket.getAssignedTechnicianEmail().isBlank()) {
+        notificationService.createNotificationForUser(
+            savedTicket.getAssignedTechnicianEmail(),
+            NotificationType.TICKET_CLOSED,
+            "Ticket Closed",
+            "Ticket has been closed: " + savedTicket.getTitle(),
+            savedTicket.getId(),
+            "TICKET",
+            "/technician/tickets"
+        );
+        }
+
+        notificationService.createNotificationForUser(
+            adminEmail,
+            NotificationType.TICKET_CLOSED,
+            "Ticket Closed",
+            "You closed ticket: " + savedTicket.getTitle(),
+            savedTicket.getId(),
+            "TICKET",
+            "/admin/tickets"
+        );
+
+    return savedTicket;
     }
 }

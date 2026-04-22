@@ -17,5 +17,9 @@ public class MongoCollectionInitializer {
         if (!mongoTemplate.collectionExists("resources")) {
             mongoTemplate.createCollection("resources");
         }
+
+        if (!mongoTemplate.collectionExists("notifications")) {
+            mongoTemplate.createCollection("notifications");
+        }
     }
 }
