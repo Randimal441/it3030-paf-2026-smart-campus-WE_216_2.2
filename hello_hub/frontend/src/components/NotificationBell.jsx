@@ -64,9 +64,10 @@ export default function NotificationBell({ active = false, notificationsPath }) 
 
       const nextCount = Number(countRes?.data?.unreadCount || 0);
       const nextList = Array.isArray(listRes?.data) ? listRes.data : [];
+      const unreadList = nextList.filter((item) => !item.isRead);
 
       setUnreadCount(nextCount);
-      setNotifications(nextList);
+      setNotifications(unreadList);
     } catch (error) {
       setUnreadCount(0);
       setNotifications([]);
@@ -110,33 +111,30 @@ export default function NotificationBell({ active = false, notificationsPath }) 
       return;
     }
 
+    const wasUnread = !item.isRead;
+    let didMarkRead = false;
     if (!item.isRead) {
       try {
         await markNotificationAsRead(item.id);
-        setUnreadCount((prev) => Math.max(0, prev - 1));
-        setNotifications((prev) =>
-          prev.map((notification) =>
-            notification.id === item.id
-              ? { ...notification, isRead: true }
-              : notification
-          )
-        );
+        didMarkRead = true;
       } catch (error) {
         // Keep navigation behavior even if read update fails.
       }
     }
 
+    setNotifications((prev) => prev.filter((notification) => notification.id !== item.id));
+    if (wasUnread && didMarkRead) {
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+    }
     setIsOpen(false);
-    navigate(item.actionUrl || notificationsPath);
+    navigate(notificationsPath);
   };
 
   const onMarkAllRead = async () => {
     try {
       await markAllNotificationsAsRead();
       setUnreadCount(0);
-      setNotifications((prev) =>
-        prev.map((notification) => ({ ...notification, isRead: true }))
-      );
+      setNotifications([]);
     } catch (error) {
       // Best effort action for dropdown quick controls.
     }

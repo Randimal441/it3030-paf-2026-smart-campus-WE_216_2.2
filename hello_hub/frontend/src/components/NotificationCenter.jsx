@@ -7,7 +7,7 @@ import {
   markNotificationAsRead,
 } from "../api/notificationService";
 
-const TYPE_FILTERS = ["ALL", "UNREAD", "TICKET", "BOOKING", "COMMENT", "RESOURCE"];
+const TYPE_FILTERS = ["ALL", "UNREAD", "TICKET", "BOOKING"];
 
 const formatTimeLabel = (timestamp) => {
   if (!timestamp) {
@@ -183,9 +183,14 @@ export default function NotificationCenter({ title, subtitle, emptyText }) {
                   <div className="notification-card-body">
                     <div className="notification-card-title-row">
                       <h3>{item.title}</h3>
-                      <span className="notification-type-pill">
-                        {item.type?.replaceAll("_", " ") || "UPDATE"}
-                      </span>
+                      <div className="notification-pill-group">
+                        <span className="notification-type-pill">
+                          {item.type?.replaceAll("_", " ") || "UPDATE"}
+                        </span>
+                        {item.isRead ? (
+                          <span className="notification-status-pill">Read</span>
+                        ) : null}
+                      </div>
                     </div>
 
                     <p>{item.message}</p>
