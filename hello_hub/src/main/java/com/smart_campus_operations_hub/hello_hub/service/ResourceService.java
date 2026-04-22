@@ -3,8 +3,11 @@ package com.smart_campus_operations_hub.hello_hub.service;
 import com.smart_campus_operations_hub.hello_hub.dto.ResourceRequestDTO;
 import com.smart_campus_operations_hub.hello_hub.dto.ResourceResponseDTO;
 import com.smart_campus_operations_hub.hello_hub.exception.ResourceNotFoundException;
+import com.smart_campus_operations_hub.hello_hub.model.AppUser;
+import com.smart_campus_operations_hub.hello_hub.model.NotificationType;
 import com.smart_campus_operations_hub.hello_hub.model.Resource;
 import com.smart_campus_operations_hub.hello_hub.model.ResourceType;
+import com.smart_campus_operations_hub.hello_hub.model.UserRole;
 import com.smart_campus_operations_hub.hello_hub.repository.ResourceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,6 +20,8 @@ import java.util.List;
 public class ResourceService {
 
     private final ResourceRepository resourceRepository;
+    private final UserService userService;
+    private final NotificationService notificationService;
 
     public ResourceResponseDTO createResource(ResourceRequestDTO dto) {
         Resource resource = mapToEntity(dto);
@@ -26,6 +31,21 @@ public class ResourceService {
         resource.setId(nextId);
         resource.setCreatedAt(LocalDateTime.now());
         Resource savedResource = resourceRepository.save(resource);
+
+        List<String> adminEmails = userService.getUsersByRole(UserRole.ADMIN).stream()
+            .map(AppUser::getEmail)
+            .toList();
+
+        notificationService.createNotificationForUsers(
+            adminEmails,
+            NotificationType.RESOURCE_CREATED,
+            "Resource Added",
+            "Resource " + savedResource.getName() + " was added.",
+            String.valueOf(savedResource.getId()),
+            "RESOURCE",
+            "/admin/resources"
+        );
+
         return mapToResponseDTO(savedResource);
     }
 

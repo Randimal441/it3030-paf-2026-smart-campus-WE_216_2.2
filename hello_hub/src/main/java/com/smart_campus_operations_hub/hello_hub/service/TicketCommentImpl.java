@@ -124,13 +124,14 @@ public class TicketCommentImpl implements TicketCommentService {
         }
 
         for (String email : recipientEmails) {
-            AppUser recipient = userService.getByEmail(email);
-            String actionUrl = switch (recipient.getRole()) {
-                case ADMIN -> "/admin/tickets";
-                case TECHNICIAN -> "/technician/tickets";
-                case LECTURER -> "/lecturer/tickets";
-                default -> "/student/tickets";
-            };
+            AppUser recipient = null;
+            try {
+                recipient = userService.getByEmail(email);
+            } catch (RuntimeException ex) {
+                // Fall back to a default path when user lookup fails.
+            }
+
+            String actionUrl = resolveTicketActionUrl(recipient != null ? recipient.getRole() : null);
 
             notificationService.createNotificationForUser(
                     email,
@@ -142,6 +143,19 @@ public class TicketCommentImpl implements TicketCommentService {
                     actionUrl
             );
         }
+    }
+
+    private String resolveTicketActionUrl(UserRole role) {
+        if (role == null) {
+            return "/student/tickets";
+        }
+
+        return switch (role) {
+            case ADMIN -> "/admin/tickets";
+            case TECHNICIAN -> "/technician/tickets";
+            case LECTURER -> "/lecturer/tickets";
+            default -> "/student/tickets";
+        };
     }
 
 }
