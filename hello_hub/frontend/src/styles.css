@@ -131,6 +131,85 @@ body {
   box-shadow: 0 14px 24px rgba(52, 95, 192, 0.32);
 }
 
+.login-divider {
+  margin: 18px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #7d8ba4;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+}
+
+.login-divider::before,
+.login-divider::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: rgba(125, 139, 164, 0.4);
+}
+
+.login-mode-toggle {
+  display: inline-flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  background: #edf2fb;
+  padding: 6px;
+  border-radius: 999px;
+}
+
+.login-mode-toggle .user-nav-link {
+  padding: 6px 14px;
+  font-size: 13px;
+  border-radius: 999px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 360px;
+}
+
+.password-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-field input {
+  width: 100%;
+  padding-right: 44px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  color: #5c6780;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.password-toggle svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.password-toggle:hover {
+  background: #e5ebf7;
+  color: #2d3b55;
+}
+
 .google-signin-icon {
   width: 30px;
   height: 30px;
