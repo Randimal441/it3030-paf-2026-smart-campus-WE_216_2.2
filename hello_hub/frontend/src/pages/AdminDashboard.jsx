@@ -15,16 +15,17 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchAdminStats = async () => {
       try {
-        const [bookingsRes, resourcesRes, ticketsRes] = await Promise.all([
+        const [bookingsRes, resourcesRes, ticketsRes, notificationsRes] = await Promise.all([
           getAllBookings(),
           getAllResources(),
-          api.get("/api/tickets/my-tickets") // Note: This might need an admin-all-tickets endpoint
+          api.get("/api/tickets/my-tickets"), // Note: This might need an admin-all-tickets endpoint
+          api.get("/api/notifications/unread-count")
         ]);
 
         setStatsData({
           activeBookings: (bookingsRes.data || []).filter(b => b.status === "PENDING" || b.status === "APPROVED").length,
           faultReports: (ticketsRes.data || []).length, // placeholder, ideally all tickets
-          notifications: 0,
+          notifications: Number(notificationsRes?.data?.unreadCount || 0),
           resourceCount: (resourcesRes.data || []).length
         });
       } catch (err) {

@@ -1,9 +1,12 @@
-import React from "react";
+import NotificationCenter from "../components/NotificationCenter";
 
 export default function UserNotifications() {
   return (
-    <div>
-      <h2>This is user notifications page</h2>
-    </div>
+    <NotificationCenter
+      title="My Notifications"
+      subtitle="Track ticket updates, booking decisions, and discussion activity."
+      emptyText="No notifications to show right now."
+      filters={["ALL", "UNREAD", "TICKET", "BOOKING"]}
+    />
   );
 }

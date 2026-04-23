@@ -1,5 +1,7 @@
 package com.smart_campus_operations_hub.hello_hub.controller;
 
+import com.smart_campus_operations_hub.hello_hub.dto.AuthLoginRequest;
+import com.smart_campus_operations_hub.hello_hub.dto.AuthRegisterRequest;
 import com.smart_campus_operations_hub.hello_hub.dto.AuthResponse;
 import com.smart_campus_operations_hub.hello_hub.dto.RoleSelectionRequest;
 import com.smart_campus_operations_hub.hello_hub.dto.UserDto;
@@ -18,6 +20,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Collections;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -48,5 +52,30 @@ public class AuthController {
 
         String token = jwtService.generateToken(userDetails);
         return ResponseEntity.ok(new AuthResponse(token, userMapper.toDto(updated)));
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody AuthRegisterRequest request) {
+        AppUser created = userService.registerLocalUser(request.name(), request.email(), request.password());
+        UserDetails userDetails = new User(created.getEmail(), created.getPasswordHash(), Collections.emptyList());
+        String token = jwtService.generateToken(userDetails);
+        return ResponseEntity.ok(new AuthResponse(token, userMapper.toDto(created)));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthLoginRequest request) {
+        AppUser user = userService.authenticateLocalUser(request.email(), request.password());
+
+        UserDetails userDetails = new User(
+                user.getEmail(),
+                user.getPasswordHash(),
+                user.getRole() == null
+                        ? Collections.emptyList()
+                        : java.util.List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority(
+                        "ROLE_" + user.getRole().name()))
+        );
+
+        String token = jwtService.generateToken(userDetails);
+        return ResponseEntity.ok(new AuthResponse(token, userMapper.toDto(user)));
     }
 }

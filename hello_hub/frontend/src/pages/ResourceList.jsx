@@ -136,7 +136,8 @@ export default function ResourceList() {
         resourceName: resource.name,
         startTime: resource.availabilityStartTime?.slice(0, 5),
         endTime: resource.availabilityEndTime?.slice(0, 5),
-        date: resolveResourceDate(resource)
+        date: resolveResourceDate(resource),
+        capacity: resource.capacity
       } 
     });
   };

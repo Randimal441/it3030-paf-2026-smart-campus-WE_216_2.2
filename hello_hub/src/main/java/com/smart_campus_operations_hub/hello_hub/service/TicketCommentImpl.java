@@ -9,7 +9,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +20,7 @@ public class TicketCommentImpl implements TicketCommentService {
      private final TicketCommentRepository commentRepository;
     private final TicketRepository ticketRepository;
     private final UserService userService;
+    private final NotificationService notificationService;
 
     @Override
     public TicketComment addComment(CommentRequestDTO dto, String email) {
@@ -44,7 +47,9 @@ public class TicketCommentImpl implements TicketCommentService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        return commentRepository.save(comment);
+        TicketComment savedComment = commentRepository.save(comment);
+        notifyTicketStakeholders(ticket, user, savedComment.getMessage());
+        return savedComment;
     }
 
     @Override
@@ -93,6 +98,64 @@ public class TicketCommentImpl implements TicketCommentService {
         }
 
         commentRepository.deleteById(commentId);
+    }
+
+    private void notifyTicketStakeholders(Ticket ticket, AppUser commenter, String message) {
+        Set<String> recipientEmails = new HashSet<>();
+
+        if (ticket.getCreatedByEmail() != null && !ticket.getCreatedByEmail().isBlank()) {
+            recipientEmails.add(ticket.getCreatedByEmail());
+        }
+
+        if (ticket.getAssignedTechnicianEmail() != null && !ticket.getAssignedTechnicianEmail().isBlank()) {
+            recipientEmails.add(ticket.getAssignedTechnicianEmail());
+        }
+
+        List<String> adminEmails = userService.getUsersByRole(UserRole.ADMIN).stream()
+                .map(AppUser::getEmail)
+                .toList();
+        recipientEmails.addAll(adminEmails);
+
+        recipientEmails.remove(commenter.getEmail());
+
+        String preview = message == null ? "" : message.trim();
+        if (preview.length() > 110) {
+            preview = preview.substring(0, 107) + "...";
+        }
+
+        for (String email : recipientEmails) {
+            AppUser recipient = null;
+            try {
+                recipient = userService.getByEmail(email);
+            } catch (RuntimeException ex) {
+                // Fall back to a default path when user lookup fails.
+            }
+
+            String actionUrl = resolveTicketActionUrl(recipient != null ? recipient.getRole() : null);
+
+            notificationService.createNotificationForUser(
+                    email,
+                    NotificationType.COMMENT_ADDED,
+                    "New Comment on Ticket",
+                    commenter.getName() + ": " + preview,
+                    ticket.getId(),
+                    "TICKET",
+                    actionUrl
+            );
+        }
+    }
+
+    private String resolveTicketActionUrl(UserRole role) {
+        if (role == null) {
+            return "/student/tickets";
+        }
+
+        return switch (role) {
+            case ADMIN -> "/admin/tickets";
+            case TECHNICIAN -> "/technician/tickets";
+            case LECTURER -> "/lecturer/tickets";
+            default -> "/student/tickets";
+        };
     }
 
 }
