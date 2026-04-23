@@ -33,6 +33,7 @@ export default function Userbookings() {
         bookingDate: location.state.date || "",
         startTime: location.state.startTime || "",
         endTime: location.state.endTime || "",
+        attendees: location.state.capacity || ""
       }));
       setShowModal(true);
     }
@@ -173,15 +174,16 @@ export default function Userbookings() {
                     <th>Resource</th>
                     <th>Date</th>
                     <th>Time Slot</th>
+                    <th>Attendees</th>
                     <th>Status</th>
                     <th style={{ textAlign: 'right' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {isLoading ? (
-                    <tr><td colSpan="5" style={{ padding: "24px", textAlign: "center" }}>Loading your bookings...</td></tr>
+                    <tr><td colSpan="6" style={{ padding: "24px", textAlign: "center" }}>Loading your bookings...</td></tr>
                   ) : bookings.length === 0 ? (
-                    <tr><td colSpan="5" style={{ padding: "24px", textAlign: "center" }}>No bookings found. Try requesting one!</td></tr>
+                    <tr><td colSpan="6" style={{ padding: "24px", textAlign: "center" }}>No bookings found. Try requesting one!</td></tr>
                   ) : (
                     bookings.map((booking) => (
                       <tr key={booking.id}>
@@ -192,6 +194,7 @@ export default function Userbookings() {
                         <td>
                           {booking.startTime?.slice(0, 5)} - {booking.endTime?.slice(0, 5)}
                         </td>
+                        <td>{booking.attendees}</td>
                         <td>
                           <span
                             className="status-badge-active" // Using existing pulse animation class
@@ -310,12 +313,13 @@ export default function Userbookings() {
                 ></textarea>
               </div>
               <div>
-                <label style={{ display: "block", marginBottom: "4px", fontSize: "14px", fontWeight: "600" }}>Attendees (if applicable)</label>
+                <label style={{ display: "block", marginBottom: "4px", fontSize: "14px", fontWeight: "600" }}>Attendees</label>
                 <input 
                   type="number" 
                   name="attendees" 
                   style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--outline)" }} 
                   placeholder="Approximate count"
+                  required
                   onChange={handleInputChange}
                   value={formData.attendees}
                 />

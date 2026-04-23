@@ -19,6 +19,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Service
 @RequiredArgsConstructor
@@ -44,6 +46,18 @@ public class ResourceBookingService {
         if (dto.getStartTime().isBefore(resource.getAvailabilityStartTime())
                 || dto.getEndTime().isAfter(resource.getAvailabilityEndTime())) {
             throw new BadRequestException("Requested time is outside resource availability window.");
+        }
+
+        // Check for overlapping APPROVED bookings
+        List<ResourceBooking> overlaps = resourceBookingRepository.findOverlappingBookings(
+                resource.getId(),
+                dto.getBookingDate(),
+                dto.getStartTime(),
+                dto.getEndTime()
+        );
+
+        if (!overlaps.isEmpty()) {
+            throw new BadRequestException("The requested time slot is already booked and approved by another user.");
         }
 
         ResourceBooking booking = ResourceBooking.builder()
@@ -104,13 +118,15 @@ public class ResourceBookingService {
                 .collect(Collectors.toList());
     }
 
-    public ResourceBookingResponseDTO updateBookingStatus(Long id, BookingStatus status) {
+    public ResourceBookingResponseDTO updateBookingStatus(Long id, BookingStatus newStatus) {
         ResourceBooking booking = resourceBookingRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + id));
-        booking.setStatus(status);
+        
+        BookingStatus oldStatus = booking.getStatus();
+        booking.setStatus(newStatus);
         ResourceBooking saved = resourceBookingRepository.save(booking);
 
-        NotificationType type = switch (status) {
+        NotificationType type = switch (newStatus) {
             case APPROVED -> NotificationType.BOOKING_APPROVED;
             case REJECTED -> NotificationType.BOOKING_REJECTED;
             case CANCELLED -> NotificationType.BOOKING_CANCELLED;
@@ -121,8 +137,8 @@ public class ResourceBookingService {
         notificationService.createNotificationForUser(
                 saved.getRequesterEmail(),
                 type,
-                "Booking " + status.name(),
-                "Your booking for " + saved.getResourceName() + " was marked as " + status.name() + ".",
+                "Booking " + newStatus.name(),
+                "Your booking for " + saved.getResourceName() + " was marked as " + newStatus.name() + ".",
                 String.valueOf(saved.getId()),
                 "BOOKING",
                 requesterPath

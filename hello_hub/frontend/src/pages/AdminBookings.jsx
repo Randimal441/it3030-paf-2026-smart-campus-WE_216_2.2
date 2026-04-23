@@ -125,30 +125,32 @@ export default function AdminBookings() {
               <table className="resources-table">
                 <thead>
                   <tr>
-                    <th>User</th>
                     <th>Resource</th>
+                    <th>Student</th>
+                    <th>Date</th>
                     <th>Time Slot</th>
+                    <th>Attendees</th>
                     <th>Status</th>
-                    <th style={{ textAlign: 'right' }}>Review</th>
+                    <th style={{ textAlign: "right" }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {isLoading ? (
-                    <tr><td colSpan="5" style={{ padding: "24px", textAlign: "center" }}>Loading mappings...</td></tr>
+                    <tr><td colSpan="7" style={{ padding: "24px", textAlign: "center" }}>Loading bookings...</td></tr>
                   ) : filteredBookings.length === 0 ? (
-                    <tr><td colSpan="5" style={{ padding: "24px", textAlign: "center" }}>No bookings match this filter.</td></tr>
+                    <tr><td colSpan="7" style={{ padding: "24px", textAlign: "center" }}>No bookings match this filter.</td></tr>
                   ) : (
                     filteredBookings.map((booking) => (
                       <tr key={booking.id}>
                         <td>
-                          <strong>{booking.requesterEmail}</strong>
-                          <div style={{ fontSize: '11px', color: 'var(--muted)' }}>{booking.requesterRole}</div>
+                          <strong>{booking.resourceName}</strong>
                         </td>
-                        <td>{booking.resourceName}</td>
+                        <td style={{ fontSize: "14px" }}>{booking.requesterEmail}</td>
+                        <td>{booking.bookingDate}</td>
                         <td>
-                          {booking.bookingDate} <br />
-                          <span style={{ fontSize: '12px' }}>{booking.startTime?.slice(0, 5)} - {booking.endTime?.slice(0, 5)}</span>
+                          {booking.startTime?.slice(0, 5)} - {booking.endTime?.slice(0, 5)}
                         </td>
+                        <td>{booking.attendees || "-"}</td>
                         <td>
                           <span
                             className="status-badge-active"
