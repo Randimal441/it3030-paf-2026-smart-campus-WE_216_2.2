@@ -7,7 +7,7 @@ import {
   markNotificationAsRead,
 } from "../api/notificationService";
 
-const TYPE_FILTERS = ["ALL", "UNREAD", "TICKET", "BOOKING"];
+const DEFAULT_FILTERS = ["ALL", "UNREAD", "TICKET", "BOOKING"];
 
 const formatTimeLabel = (timestamp) => {
   if (!timestamp) {
@@ -38,7 +38,12 @@ const inferGroup = (type = "") => {
   return "OTHER";
 };
 
-export default function NotificationCenter({ title, subtitle, emptyText }) {
+export default function NotificationCenter({
+  title,
+  subtitle,
+  emptyText,
+  filters = DEFAULT_FILTERS,
+}) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState([]);
@@ -134,7 +139,7 @@ export default function NotificationCenter({ title, subtitle, emptyText }) {
       <section className="tickets-content">
         <aside className="tickets-sidebar">
           <div className="tickets-filter-list" role="group" aria-label="Notification filters">
-            {TYPE_FILTERS.map((filter) => (
+            {filters.map((filter) => (
               <button
                 key={filter}
                 type="button"
