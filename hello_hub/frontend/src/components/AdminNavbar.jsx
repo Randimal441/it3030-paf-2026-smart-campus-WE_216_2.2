@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import NotificationBell from "./NotificationBell";
@@ -7,6 +7,7 @@ export default function AdminNavbar({ activeMenu }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
+  const [showProfile, setShowProfile] = useState(false);
 
   const lastPathSegment = location.pathname.split("/").filter(Boolean).pop();
   const resolvedActiveMenu = activeMenu || (lastPathSegment === "dashboard" || lastPathSegment === "resources" || lastPathSegment === "bookings" || lastPathSegment === "tickets" || lastPathSegment === "notifications" || lastPathSegment === "approvals" ? lastPathSegment : "dashboard");
@@ -62,11 +63,28 @@ export default function AdminNavbar({ activeMenu }) {
           active={resolvedActiveMenu === "notifications"}
           notificationsPath="/admin/notifications"
         />
-        <button type="button" className="icon-btn" aria-label="Profile">
-          <svg viewBox="0 0 24 24" role="img">
-            <path d="M12 12a4 4 0 100-8 4 4 0 000 8zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z" />
-          </svg>
-        </button>
+        <div className="profile-menu">
+          <button
+            type="button"
+            className="icon-btn"
+            aria-label="Profile"
+            onClick={() => setShowProfile((prev) => !prev)}
+          >
+            <svg viewBox="0 0 24 24" role="img">
+              <path d="M12 12a4 4 0 100-8 4 4 0 000 8zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z" />
+            </svg>
+          </button>
+          {showProfile ? (
+            <div className="profile-card">
+              <p className="profile-name">{user?.name || "User"}</p>
+              <p className="profile-email">{user?.email || "No email"}</p>
+              <div className="profile-meta">
+                <span>Role: {user?.role || "Pending"}</span>
+                <span>Provider: {user?.provider || "LOCAL"}</span>
+              </div>
+            </div>
+          ) : null}
+        </div>
         <button type="button" className="cta-btn secondary" onClick={onLogout}>
           Sign Out
         </button>
