@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { registerWithEmail } from "../api/authService";
+import loginVisual from "../assets/login-card-photo.png";
 
 export default function SignupPage() {
   const navigate = useNavigate();
@@ -193,7 +194,7 @@ export default function SignupPage() {
         <div className="login-visual-column" aria-hidden="true">
           <img
             className="login-visual-image"
-            src="/login-card-photo.png"
+            src={loginVisual}
             alt=""
             loading="eager"
             decoding="async"
