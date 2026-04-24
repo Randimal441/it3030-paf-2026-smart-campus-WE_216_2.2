@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import NotificationBell from "./NotificationBell";
@@ -6,7 +6,8 @@ import NotificationBell from "./NotificationBell";
 export default function TechnicianNavbar({ activeMenu }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
+  const [showProfile, setShowProfile] = useState(false);
 
   const lastPathSegment = location.pathname.split("/").filter(Boolean).pop();
   const resolvedActiveMenu =
@@ -52,20 +53,32 @@ export default function TechnicianNavbar({ activeMenu }) {
       </div>
 
       <div className="user-nav-actions" aria-label="Quick actions">
-        <button type="button" className="icon-btn" aria-label="Search">
-          <svg viewBox="0 0 24 24" role="img">
-            <path d="M10.5 4a6.5 6.5 0 014.99 10.67l4.42 4.42-1.41 1.41-4.42-4.42A6.5 6.5 0 1110.5 4zm0 2a4.5 4.5 0 100 9 4.5 4.5 0 000-9z" />
-          </svg>
-        </button>
         <NotificationBell
           active={resolvedActiveMenu === "notifications"}
           notificationsPath="/technician/notifications"
         />
-        <button type="button" className="icon-btn" aria-label="Profile">
-          <svg viewBox="0 0 24 24" role="img">
-            <path d="M12 12a4 4 0 100-8 4 4 0 000 8zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z" />
-          </svg>
-        </button>
+        <div className="profile-menu">
+          <button
+            type="button"
+            className="icon-btn"
+            aria-label="Profile"
+            onClick={() => setShowProfile((prev) => !prev)}
+          >
+            <svg viewBox="0 0 24 24" role="img">
+              <path d="M12 12a4 4 0 100-8 4 4 0 000 8zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z" />
+            </svg>
+          </button>
+          {showProfile ? (
+            <div className="profile-card">
+              <p className="profile-name">{user?.name || "User"}</p>
+              <p className="profile-email">{user?.email || "No email"}</p>
+              <div className="profile-meta">
+                <span>Role: {user?.role || "Pending"}</span>
+                <span>Provider: {user?.provider || "LOCAL"}</span>
+              </div>
+            </div>
+          ) : null}
+        </div>
         <button type="button" className="cta-btn secondary" onClick={onLogout}>
           Sign Out
         </button>

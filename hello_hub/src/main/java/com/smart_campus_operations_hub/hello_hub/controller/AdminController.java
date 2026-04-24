@@ -6,6 +6,8 @@ import com.smart_campus_operations_hub.hello_hub.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -22,5 +24,15 @@ public class AdminController {
     @GetMapping("/users")
     public ResponseEntity<List<UserDto>> listUsers() {
         return ResponseEntity.ok(userService.getAllUsers().stream().map(userMapper::toDto).toList());
+    }
+
+    @GetMapping("/users/pending")
+    public ResponseEntity<List<UserDto>> listPendingUsers() {
+        return ResponseEntity.ok(userService.getPendingUsers().stream().map(userMapper::toDto).toList());
+    }
+
+    @PatchMapping("/users/{id}/approve")
+    public ResponseEntity<UserDto> approveUser(@PathVariable String id) {
+        return ResponseEntity.ok(userMapper.toDto(userService.approveUser(id)));
     }
 }

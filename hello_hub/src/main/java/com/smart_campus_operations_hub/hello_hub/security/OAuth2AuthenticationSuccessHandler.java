@@ -36,10 +36,17 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             throws IOException, ServletException {
 
         String email = resolveEmail(authentication);
+        AppUser user = userService.getByEmail(email);
+
+        if (!userService.isApproved(user)) {
+            String redirectUrl = frontendRedirectUri + "/login?approval=pending";
+            getRedirectStrategy().sendRedirect(request, response, redirectUrl);
+            return;
+        }
+
         UserDetails userDetails = userDetailsService.loadUserByUsername(email);
         String token = jwtService.generateToken(userDetails);
 
-        AppUser user = userService.getByEmail(email);
         String role = user.getRole() == null ? "" : user.getRole().name();
 
         String redirectUrl = frontendRedirectUri

@@ -13,6 +13,7 @@ public record UserDto(
         String email,
         UserRole role,
         AuthProvider provider,
+        Boolean approved,
         Instant createdAt
 ) {
 }

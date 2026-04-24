@@ -29,5 +29,7 @@ public class AppUser {
 
     private String passwordHash;
 
+    private Boolean approved;
+
     private Instant createdAt;
 }

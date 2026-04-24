@@ -33,6 +33,7 @@ public class UserService {
                 .email(email)
                 .provider(AuthProvider.GOOGLE)
                 .role(null)
+                .approved(false)
                 .createdAt(Instant.now())
                 .build();
 
@@ -50,6 +51,7 @@ public class UserService {
                 .provider(AuthProvider.LOCAL)
                 .passwordHash(passwordEncoder.encode(rawPassword))
                 .role(null)
+                .approved(false)
                 .createdAt(Instant.now())
                 .build();
 
@@ -68,6 +70,10 @@ public class UserService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials.");
         }
 
+        if (!isApproved(user)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Account pending admin approval.");
+        }
+
         return user;
     }
 
@@ -79,6 +85,21 @@ public class UserService {
     public AppUser assignRole(String email, UserRole role) {
         AppUser user = getByEmail(email);
         user.setRole(role);
+        return userRepository.save(user);
+    }
+
+    public boolean isApproved(AppUser user) {
+        return user.getApproved() == null || Boolean.TRUE.equals(user.getApproved());
+    }
+
+    public List<AppUser> getPendingUsers() {
+        return userRepository.findByApproved(false);
+    }
+
+    public AppUser approveUser(String id) {
+        AppUser user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
+        user.setApproved(true);
         return userRepository.save(user);
     }
 

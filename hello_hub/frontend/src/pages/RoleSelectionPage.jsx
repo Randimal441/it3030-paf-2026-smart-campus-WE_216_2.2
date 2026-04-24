@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import api from "../api/axiosClient";
 import { useAuth } from "../context/AuthContext";
 
@@ -7,17 +7,48 @@ const roles = ["STUDENT", "LECTURER", "TECHNICIAN"];
 
 export default function RoleSelectionPage() {
   const navigate = useNavigate();
-  const { setUser, loginWithToken } = useAuth();
+  const [params] = useSearchParams();
+  const { setUser, loginWithToken, logout } = useAuth();
   const [selectedRole, setSelectedRole] = useState("STUDENT");
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+
+  useEffect(() => {
+    const approval = params.get("approval");
+    if (approval === "pending") {
+      setNotice("Your account is pending admin approval. Select your role to continue.");
+      return undefined;
+    }
+    setNotice("");
+    return undefined;
+  }, [params, navigate]);
 
   const handleSubmit = async () => {
     setSubmitting(true);
+    setError("");
     try {
       const res = await api.post("/api/auth/select-role", { role: selectedRole });
+      if (res.data?.user?.approved === false) {
+        logout();
+        setNotice("Your account is pending admin approval. Redirecting to sign in...");
+        setTimeout(() => {
+          navigate("/login?approval=pending", { replace: true });
+        }, 2000);
+        return;
+      }
+
       loginWithToken(res.data.token);
       setUser(res.data.user);
       navigate(`/${selectedRole.toLowerCase()}`, { replace: true });
+    } catch (requestError) {
+      const status = requestError?.response?.status;
+      if (status === 403) {
+        logout();
+        navigate("/login?approval=pending", { replace: true });
+        return;
+      }
+      setError(requestError?.response?.data?.message || "Unable to save role. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -33,6 +64,9 @@ export default function RoleSelectionPage() {
             Choose how you want to enter Smart Campus Operations Hub. This controls which
             dashboard and tools you can access.
           </p>
+
+          {notice ? <div className="form-alert">{notice}</div> : null}
+          {error ? <div className="form-alert error">{error}</div> : null}
 
           <div className="role-option-grid">
             {roles.map((role) => (

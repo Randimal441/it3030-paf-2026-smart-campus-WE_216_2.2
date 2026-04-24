@@ -1,24 +1,67 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getMyBookings } from "../api/bookingService";
+import { getAllResources } from "../api/resourceService";
+import { getMyNotifications, getUnreadNotificationCount } from "../api/notificationService";
 import api from "../api/axiosClient";
 
 export default function UserHome() {
   const { user } = useAuth();
   const [stats, setStats] = useState({ activeBookings: 0, resolvedTickets: 0 });
   const [activities, setActivities] = useState([]);
+  const [upcomingBookings, setUpcomingBookings] = useState([]);
+  const [ticketSummary, setTicketSummary] = useState({ open: 0, progress: 0, resolved: 0 });
+  const [resourceRecommendations, setResourceRecommendations] = useState([]);
+  const [notificationsPreview, setNotificationsPreview] = useState([]);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+
+  const toDateTimeValue = (booking) => {
+    if (!booking?.bookingDate) {
+      return null;
+    }
+
+    const datePart = String(booking.bookingDate).slice(0, 10);
+    const timePart = booking?.startTime ? String(booking.startTime).slice(0, 5) : "00:00";
+    const timestamp = new Date(`${datePart}T${timePart}:00`).getTime();
+    return Number.isNaN(timestamp) ? null : timestamp;
+  };
+
+  const normalizeTicketStatus = (status = "") => {
+    const normalized = status.toString().replace(/_/g, " ").trim().toLowerCase();
+    if (!normalized) {
+      return "open";
+    }
+    if (normalized === "assigned" || normalized === "in progress") {
+      return "in progress";
+    }
+    if (normalized === "resolved") {
+      return "resolved";
+    }
+    if (normalized === "closed") {
+      return "resolved";
+    }
+    if (normalized === "rejected" || normalized === "reject") {
+      return "resolved";
+    }
+    return normalized;
+  };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [bookingsRes, ticketsRes] = await Promise.all([
+        const [bookingsRes, ticketsRes, resourcesRes, notificationsRes, unreadRes] = await Promise.all([
           getMyBookings(),
-          api.get("/api/tickets/my-tickets")
+          api.get("/api/tickets/my-tickets"),
+          getAllResources(),
+          getMyNotifications(),
+          getUnreadNotificationCount()
         ]);
 
         const myBookings = bookingsRes.data || [];
         const myTickets = ticketsRes.data || [];
+        const resources = resourcesRes.data || [];
+        const notifications = notificationsRes.data || [];
 
         const activeBookings = myBookings.filter(b => b.status === "PENDING" || b.status === "APPROVED").length;
         const resolvedTickets = myTickets.filter(t => t.status === "RESOLVED" || t.status === "CLOSED").length;
@@ -41,6 +84,50 @@ export default function UserHome() {
           });
         }
         setActivities(recentActivities.slice(0, 2));
+
+        const upcoming = myBookings
+          .map((booking) => ({
+            ...booking,
+            sortValue: toDateTimeValue(booking)
+          }))
+          .filter((booking) => booking.sortValue !== null)
+          .sort((a, b) => a.sortValue - b.sortValue)
+          .slice(0, 3);
+        setUpcomingBookings(upcoming);
+
+        const summary = myTickets.reduce(
+          (acc, ticket) => {
+            const status = normalizeTicketStatus(ticket?.status || "open");
+            if (status === "open") {
+              acc.open += 1;
+            } else if (status === "in progress") {
+              acc.progress += 1;
+            } else {
+              acc.resolved += 1;
+            }
+            return acc;
+          },
+          { open: 0, progress: 0, resolved: 0 }
+        );
+        setTicketSummary(summary);
+
+        const recommendations = resources
+          .filter((resource) => resource?.status === "ACTIVE" || resource?.status === "AVAILABLE")
+          .sort((a, b) => (b?.capacity || 0) - (a?.capacity || 0))
+          .slice(0, 3);
+        setResourceRecommendations(recommendations);
+
+        const sortedNotifications = notifications
+          .slice()
+          .sort((a, b) => {
+            const aTime = new Date(a?.createdAt || 0).getTime();
+            const bTime = new Date(b?.createdAt || 0).getTime();
+            return bTime - aTime;
+          })
+          .slice(0, 3);
+        setNotificationsPreview(sortedNotifications);
+
+        setUnreadNotifications(Number(unreadRes?.data?.unreadCount || 0));
 
       } catch (err) {
         console.error("Error fetching home stats:", err);
@@ -99,7 +186,7 @@ export default function UserHome() {
 
   return (
     <div className="page mesh-bg">
-      <div className="dashboard-shell">
+      <div className="dashboard-shell" style={{ width: "min(1320px, 100%)" }}>
         <div style={{ display: "flex", gap: "40px", alignItems: "center" }}>
           <div style={{ flex: 1 }}>
             <p className="kicker">Smart Campus Operations Hub</p>
@@ -147,6 +234,99 @@ export default function UserHome() {
             </div>
           </div>
         </div>
+
+        <section className="home-grid">
+          <div className="glass-card home-card">
+            <div className="home-card-header">
+              <h3>Upcoming Bookings</h3>
+              <Link to="/student/bookings" className="home-card-link">View all</Link>
+            </div>
+            {upcomingBookings.length > 0 ? (
+              <div className="home-list">
+                {upcomingBookings.map((booking) => (
+                  <div key={booking.id} className="home-list-row">
+                    <div>
+                      <p className="home-list-title">{booking.resourceName || "Resource"}</p>
+                      <p className="home-list-subtitle">
+                        {booking.bookingDate} · {booking.startTime?.slice(0, 5)} - {booking.endTime?.slice(0, 5)}
+                      </p>
+                    </div>
+                    <span className="home-pill">{booking.status}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="home-empty">No upcoming bookings.</p>
+            )}
+          </div>
+
+          <div className="glass-card home-card">
+            <div className="home-card-header">
+              <h3>My Tickets</h3>
+              <Link to="/student/tickets" className="home-card-link">Open tickets</Link>
+            </div>
+            <div className="ticket-summary-grid">
+              <div className="ticket-summary-item">
+                <span>Open</span>
+                <strong>{ticketSummary.open}</strong>
+              </div>
+              <div className="ticket-summary-item">
+                <span>In Progress</span>
+                <strong>{ticketSummary.progress}</strong>
+              </div>
+              <div className="ticket-summary-item">
+                <span>Resolved</span>
+                <strong>{ticketSummary.resolved}</strong>
+              </div>
+            </div>
+          </div>
+
+          <div className="glass-card home-card">
+            <div className="home-card-header">
+              <h3>Resource Picks</h3>
+              <Link to="/student/resources" className="home-card-link">Browse</Link>
+            </div>
+            {resourceRecommendations.length > 0 ? (
+              <div className="home-list">
+                {resourceRecommendations.map((resource) => (
+                  <div key={resource.id} className="home-list-row">
+                    <div>
+                      <p className="home-list-title">{resource.name || "Resource"}</p>
+                      <p className="home-list-subtitle">
+                        {resource.type || "Facility"} · Capacity {resource.capacity || "-"}
+                      </p>
+                    </div>
+                    <span className="home-pill">{resource.status || "ACTIVE"}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="home-empty">No resources available right now.</p>
+            )}
+          </div>
+
+          <div className="glass-card home-card">
+            <div className="home-card-header">
+              <h3>Notifications</h3>
+              <span className="home-badge">Unread {unreadNotifications}</span>
+            </div>
+            {notificationsPreview.length > 0 ? (
+              <div className="home-list">
+                {notificationsPreview.map((notification) => (
+                  <div key={notification.id} className="home-list-row">
+                    <div>
+                      <p className="home-list-title">{notification.title || "Update"}</p>
+                      <p className="home-list-subtitle">{notification.message || ""}</p>
+                    </div>
+                    <span className="home-pill">{notification.type || "INFO"}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="home-empty">No notifications yet.</p>
+            )}
+          </div>
+        </section>
 
         <div className="role-grid" style={{ marginTop: "60px" }}>
           {services.map((service, index) => (
