@@ -6,7 +6,7 @@ import loginVisual from "../assets/login-card-photo.png";
 
 export default function SignupPage() {
   const navigate = useNavigate();
-  const { user, token, loginWithToken, setUser } = useAuth();
+  const { user, token, loginWithToken, setUser, logout } = useAuth();
   const [formValues, setFormValues] = useState({
     name: "",
     email: "",
@@ -64,6 +64,12 @@ export default function SignupPage() {
         email: formValues.email.trim(),
         password: formValues.password
       });
+      if (response.data?.user?.approved === false) {
+        loginWithToken(response.data.token);
+        setUser(response.data.user);
+        navigate("/select-role?approval=pending", { replace: true });
+        return;
+      }
       finalizeAuth(response.data);
     } catch (err) {
       const message = err?.response?.data?.message || "Unable to sign up. Please try again.";

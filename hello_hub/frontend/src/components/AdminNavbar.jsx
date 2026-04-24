@@ -9,7 +9,7 @@ export default function AdminNavbar({ activeMenu }) {
   const { user, logout } = useAuth();
 
   const lastPathSegment = location.pathname.split("/").filter(Boolean).pop();
-  const resolvedActiveMenu = activeMenu || (lastPathSegment === "dashboard" || lastPathSegment === "resources" || lastPathSegment === "bookings" || lastPathSegment === "tickets" || lastPathSegment === "notifications" ? lastPathSegment : "dashboard");
+  const resolvedActiveMenu = activeMenu || (lastPathSegment === "dashboard" || lastPathSegment === "resources" || lastPathSegment === "bookings" || lastPathSegment === "tickets" || lastPathSegment === "notifications" || lastPathSegment === "approvals" ? lastPathSegment : "dashboard");
 
   const navLinkClass = (menuKey) =>
     `user-nav-link${resolvedActiveMenu === menuKey ? " active" : ""}`;
@@ -46,6 +46,9 @@ export default function AdminNavbar({ activeMenu }) {
         </button>
         <button type="button" className={navLinkClass("tickets")} onClick={() => goTo("/tickets")}>
           Tickets
+        </button>
+        <button type="button" className={navLinkClass("approvals")} onClick={() => goTo("/approvals")}>
+          Approvals
         </button>
       </div>
 

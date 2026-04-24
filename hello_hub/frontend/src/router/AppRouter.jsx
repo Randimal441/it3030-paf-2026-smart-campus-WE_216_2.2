@@ -18,6 +18,7 @@ import AdminBookings from "../pages/AdminBookings";
 import AdminResources from "../pages/AdminResources";
 import AdminTicket from "../pages/AdminTicket";
 import AdminNotification from "../pages/AdminNotification";
+import AdminApprovals from "../pages/AdminApprovals";
 import TechnicianLayout from "../pages/TechnianLayout";
 import TechnicianNavbar from "../components/TechnicianNavbar";
 import TechnianTickets from "../pages/TechnianTickets";
@@ -61,6 +62,7 @@ export default function AppRouter() {
         <Route path="bookings" element={<AdminBookings />} />
         <Route path="tickets" element={<AdminTicket />} />
         <Route path="notifications" element={<AdminNotification />} />
+        <Route path="approvals" element={<AdminApprovals />} />
       </Route>
 
       <Route

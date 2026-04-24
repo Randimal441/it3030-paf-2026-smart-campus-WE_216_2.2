@@ -14,6 +14,7 @@ public class UserMapper {
                 .email(user.getEmail())
                 .role(user.getRole())
                 .provider(user.getProvider())
+                .approved(user.getApproved())
                 .createdAt(user.getCreatedAt())
                 .build();
     }

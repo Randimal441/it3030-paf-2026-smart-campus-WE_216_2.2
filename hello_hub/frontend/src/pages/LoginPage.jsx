@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import loginVisual from "../assets/login-card-photo.png";
 import { loginWithEmail } from "../api/authService";
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
   const { user, token, loginWithToken, setUser } = useAuth();
   const [formValues, setFormValues] = useState({
     email: "",
@@ -14,12 +15,20 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
 
   useEffect(() => {
     if (token && user?.role) {
       navigate(`/${user.role.toLowerCase()}`, { replace: true });
     }
   }, [token, user, navigate]);
+
+  useEffect(() => {
+    const approval = params.get("approval");
+    if (approval === "pending") {
+      setNotice("Your account is pending admin approval. Please try again later.");
+    }
+  }, [params]);
 
   const googleLoginUrl =
     import.meta.env.VITE_GOOGLE_LOGIN_URL ||
@@ -48,6 +57,7 @@ export default function LoginPage() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError("");
+    setNotice("");
 
     setSubmitting(true);
     try {
@@ -127,6 +137,7 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {notice ? <div className="form-alert">{notice}</div> : null}
             {error ? <div className="form-alert error">{error}</div> : null}
 
             <button className="cta-btn" type="submit" disabled={submitting}>

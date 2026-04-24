@@ -16,6 +16,8 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error?.response?.status;
+    const requestUrl = error?.config?.url || "";
+    const isAuthEndpoint = requestUrl.startsWith("/api/auth/");
 
     if (status === 401) {
       localStorage.removeItem("token");
@@ -25,7 +27,7 @@ api.interceptors.response.use(
       }
     }
 
-    if (status === 403 && window.location.pathname !== "/unauthorized") {
+    if (status === 403 && !isAuthEndpoint && window.location.pathname !== "/unauthorized") {
       window.location.href = "/unauthorized";
     }
 
