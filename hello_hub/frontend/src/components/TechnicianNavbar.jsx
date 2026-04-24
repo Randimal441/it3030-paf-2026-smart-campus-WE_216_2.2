@@ -53,11 +53,6 @@ export default function TechnicianNavbar({ activeMenu }) {
       </div>
 
       <div className="user-nav-actions" aria-label="Quick actions">
-        <button type="button" className="icon-btn" aria-label="Search">
-          <svg viewBox="0 0 24 24" role="img">
-            <path d="M10.5 4a6.5 6.5 0 014.99 10.67l4.42 4.42-1.41 1.41-4.42-4.42A6.5 6.5 0 1110.5 4zm0 2a4.5 4.5 0 100 9 4.5 4.5 0 000-9z" />
-          </svg>
-        </button>
         <NotificationBell
           active={resolvedActiveMenu === "notifications"}
           notificationsPath="/technician/notifications"
