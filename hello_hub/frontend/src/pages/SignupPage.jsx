@@ -17,6 +17,7 @@ export default function SignupPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
 
   useEffect(() => {
     if (token && user?.role) {
@@ -33,7 +34,47 @@ export default function SignupPage() {
   };
 
   const updateField = (field) => (event) => {
-    setFormValues((prev) => ({ ...prev, [field]: event.target.value }));
+    const value = event.target.value;
+    setFormValues((prev) => ({ ...prev, [field]: value }));
+    setFieldErrors((prev) => {
+      if (!prev[field]) {
+        return prev;
+      }
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
+  const validateForm = () => {
+    const nextErrors = {};
+    const name = formValues.name.trim();
+    const email = formValues.email.trim();
+    const password = formValues.password;
+    const confirmPassword = formValues.confirmPassword;
+
+    if (name.length < 3) {
+      nextErrors.name = "Name must be at least 3 characters.";
+    } else if (name.length > 80) {
+      nextErrors.name = "Name must be under 80 characters.";
+    }
+
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      nextErrors.email = "Enter a valid email address.";
+    }
+
+    if (password.length < 8) {
+      nextErrors.password = "Password must be at least 8 characters.";
+    } else if (!/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/\d/.test(password) || !/[^A-Za-z0-9]/.test(password)) {
+      nextErrors.password = "Use upper, lower, number, and symbol in the password.";
+    }
+
+    if (confirmPassword !== password) {
+      nextErrors.confirmPassword = "Passwords do not match.";
+    }
+
+    setFieldErrors(nextErrors);
+    return nextErrors;
   };
 
   const finalizeAuth = (payload) => {
@@ -52,8 +93,9 @@ export default function SignupPage() {
     event.preventDefault();
     setError("");
 
-    if (formValues.password !== formValues.confirmPassword) {
-      setError("Passwords do not match.");
+    const validationErrors = validateForm();
+    if (Object.keys(validationErrors).length > 0) {
+      setError("Please fix the highlighted fields.");
       return;
     }
 
@@ -110,7 +152,9 @@ export default function SignupPage() {
                 value={formValues.name}
                 onChange={updateField("name")}
                 required
+                aria-invalid={Boolean(fieldErrors.name)}
               />
+              {fieldErrors.name ? <div className="form-alert error">{fieldErrors.name}</div> : null}
             </div>
 
             <div className="form-group">
@@ -121,7 +165,9 @@ export default function SignupPage() {
                 value={formValues.email}
                 onChange={updateField("email")}
                 required
+                aria-invalid={Boolean(fieldErrors.email)}
               />
+              {fieldErrors.email ? <div className="form-alert error">{fieldErrors.email}</div> : null}
             </div>
 
             <div className="form-group">
@@ -133,6 +179,7 @@ export default function SignupPage() {
                   value={formValues.password}
                   onChange={updateField("password")}
                   required
+                  aria-invalid={Boolean(fieldErrors.password)}
                 />
                 <button
                   type="button"
@@ -151,6 +198,7 @@ export default function SignupPage() {
                   )}
                 </button>
               </div>
+              {fieldErrors.password ? <div className="form-alert error">{fieldErrors.password}</div> : null}
             </div>
 
             <div className="form-group">
@@ -162,6 +210,7 @@ export default function SignupPage() {
                   value={formValues.confirmPassword}
                   onChange={updateField("confirmPassword")}
                   required
+                  aria-invalid={Boolean(fieldErrors.confirmPassword)}
                 />
                 <button
                   type="button"
@@ -180,6 +229,9 @@ export default function SignupPage() {
                   )}
                 </button>
               </div>
+              {fieldErrors.confirmPassword ? (
+                <div className="form-alert error">{fieldErrors.confirmPassword}</div>
+              ) : null}
             </div>
 
             {error ? <div className="form-alert error">{error}</div> : null}
