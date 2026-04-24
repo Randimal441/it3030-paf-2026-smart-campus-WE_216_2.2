@@ -55,6 +55,7 @@ export default function ResourceList() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const canManageResources = user?.role === "ADMIN";
+  const favoritesStorageKey = `resource-catalogue-favorites:${user?.id || "guest"}`;
   const [resources, setResources] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -65,10 +66,37 @@ export default function ResourceList() {
   const [editingResourceId, setEditingResourceId] = useState(null);
   const [selectedResource, setSelectedResource] = useState(null);
   const [showResourceDetails, setShowResourceDetails] = useState(false);
+  const [favoriteResourceIds, setFavoriteResourceIds] = useState(new Set());
+  const [showFavoritesList, setShowFavoritesList] = useState(false);
+  const [favoritesListResources, setFavoritesListResources] = useState([]);
+  const [favoritesListLoading, setFavoritesListLoading] = useState(false);
+  const [favoritesListError, setFavoritesListError] = useState("");
 
   useEffect(() => {
     loadResources();
   }, []);
+
+  useEffect(() => {
+    if (canManageResources) {
+      return;
+    }
+
+    try {
+      const raw = localStorage.getItem(favoritesStorageKey);
+      const parsed = raw ? JSON.parse(raw) : [];
+      setFavoriteResourceIds(new Set(Array.isArray(parsed) ? parsed : []));
+    } catch {
+      setFavoriteResourceIds(new Set());
+    }
+  }, [favoritesStorageKey, canManageResources]);
+
+  useEffect(() => {
+    if (canManageResources) {
+      return;
+    }
+
+    localStorage.setItem(favoritesStorageKey, JSON.stringify(Array.from(favoriteResourceIds)));
+  }, [favoriteResourceIds, favoritesStorageKey, canManageResources]);
 
   const loadResources = async () => {
     try {
@@ -197,6 +225,52 @@ export default function ResourceList() {
     await loadResources();
   };
 
+  const handleToggleFavorite = (resourceId, event) => {
+    if (event) {
+      event.stopPropagation();
+    }
+
+    setFavoriteResourceIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(resourceId)) {
+        next.delete(resourceId);
+      } else {
+        next.add(resourceId);
+      }
+      return next;
+    });
+  };
+
+  const handleOpenFavoritesList = async () => {
+    setShowFavoritesList(true);
+    setFavoritesListError("");
+    setFavoritesListLoading(true);
+
+    try {
+      if (favoriteResourceIds.size === 0) {
+        setFavoritesListResources([]);
+        return;
+      }
+
+      const response = await getAllResources();
+      const allResources = response.data || [];
+      const favoriteResources = allResources.filter((resource) => favoriteResourceIds.has(resource.id));
+      setFavoritesListResources(favoriteResources);
+    } catch (err) {
+      const message = err?.response?.data?.message || "Failed to load favorite resources.";
+      setFavoritesListError(message);
+      setFavoritesListResources([]);
+    } finally {
+      setFavoritesListLoading(false);
+    }
+  };
+
+  const handleFavoriteItemClick = (resource) => {
+    setSelectedResource(resource);
+    setShowFavoritesList(false);
+    setShowResourceDetails(true);
+  };
+
   return (
     <div className="tickets-page">
       <section className="tickets-hero">
@@ -255,11 +329,24 @@ export default function ResourceList() {
         </aside>
 
         <div className="tickets-main">
-          <header className="tickets-main-header">
-            <div>
+          <header className="tickets-main-header resource-catalogue-header">
+            <div className="resource-catalogue-header-left">
               <h2>Resource Catalogue</h2>
               <span>{isLoading ? "Loading..." : `${resources.length} shown`}</span>
             </div>
+            {!canManageResources && (
+              <button
+                type="button"
+                className="favorite-list-trigger"
+                onClick={handleOpenFavoritesList}
+                aria-label="View favorite resources"
+                title="View favorite resources"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                </svg>
+              </button>
+            )}
           </header>
 
           {isLoading && <div className="ticket-empty-state">Loading resources...</div>}
@@ -370,6 +457,20 @@ export default function ResourceList() {
             <div className="resource-detail-modal-body">
               <p className="resource-detail-modal-subtitle">{selectedResource.type}</p>
 
+              <div className="resource-detail-favorite-row">
+                <button
+                  type="button"
+                  className={`favorite-toggle-btn ${favoriteResourceIds.has(selectedResource.id) ? "active" : ""}`}
+                  onClick={(event) => handleToggleFavorite(selectedResource.id, event)}
+                  aria-label={favoriteResourceIds.has(selectedResource.id) ? "Remove favorite" : "Add favorite"}
+                  title={favoriteResourceIds.has(selectedResource.id) ? "Remove favorite" : "Add favorite"}
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                  </svg>
+                </button>
+              </div>
+
               <div className="resource-detail-grid">
                 <div className="resource-detail-item">
                   <span>Location</span>
@@ -408,6 +509,54 @@ export default function ResourceList() {
                   <span aria-hidden="true">&#8594;</span>
                   Go to Booking
                 </button>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
+      {!canManageResources && showFavoritesList && (
+        <>
+          <div
+            className="modal-overlay"
+            onClick={() => setShowFavoritesList(false)}
+            aria-hidden="true"
+          ></div>
+          <div className="modal-container resource-detail-modal" role="dialog" aria-modal="true" aria-label="Favorite resources">
+            <div className="modal-header">
+              <h2>Favorite Resources</h2>
+              <button
+                type="button"
+                className="modal-close-btn"
+                onClick={() => setShowFavoritesList(false)}
+                aria-label="Close favorite resources"
+              >
+                x
+              </button>
+            </div>
+
+            <div className="resource-detail-modal-body">
+              {favoritesListLoading ? (
+                <div className="ticket-empty-state">Loading favorites...</div>
+              ) : favoritesListError ? (
+                <div className="ticket-empty-state" role="alert">{favoritesListError}</div>
+              ) : favoritesListResources.length === 0 ? (
+                <div className="ticket-empty-state">No favorites added yet.</div>
+              ) : (
+                <ul className="favorite-resource-list">
+                  {favoritesListResources.map((resource) => (
+                    <li key={resource.id}>
+                      <button
+                        type="button"
+                        className="favorite-resource-item"
+                        onClick={() => handleFavoriteItemClick(resource)}
+                      >
+                        <span>{resource.name}</span>
+                        <small>{resource.type}</small>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               )}
             </div>
           </div>
