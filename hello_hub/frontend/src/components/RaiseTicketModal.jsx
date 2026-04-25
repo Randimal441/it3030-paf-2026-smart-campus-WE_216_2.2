@@ -49,8 +49,10 @@ export default function RaiseTicketModal({ isOpen, onClose, onTicketCreated }) {
 
     if (!formData.contact.trim()) {
       errors.contact = "Contact number is required";
-    } else if (!/^[\d\s\-\+\(\)]+$/.test(formData.contact)) {
-      errors.contact = "Please enter a valid contact number";
+    } else if (!/^\d+$/.test(formData.contact)) {
+      errors.contact = "Contact number must contain only digits";
+    } else if (formData.contact.length > 10) {
+      errors.contact = "Contact number can have a maximum of 10 digits";
     }
 
     setFormErrors(errors);
@@ -59,9 +61,12 @@ export default function RaiseTicketModal({ isOpen, onClose, onTicketCreated }) {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    const nextValue =
+      name === "contact" ? value.replace(/\D/g, "").slice(0, 10) : value;
+
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: nextValue,
     }));
     if (formErrors[name]) {
       setFormErrors((prev) => ({
@@ -327,6 +332,9 @@ export default function RaiseTicketModal({ isOpen, onClose, onTicketCreated }) {
               value={formData.contact}
               onChange={handleInputChange}
               placeholder="Your phone number"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={10}
               className={formErrors.contact ? "input-error" : ""}
               disabled={submitting}
             />
