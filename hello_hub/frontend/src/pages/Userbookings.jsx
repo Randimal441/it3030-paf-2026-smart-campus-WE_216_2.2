@@ -58,6 +58,21 @@ export default function Userbookings() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    
+    if (name === "resourceId" && value) {
+      const selectedResource = resources.find(r => r.id === parseInt(value));
+      if (selectedResource) {
+        setFormData(prev => ({
+          ...prev,
+          resourceId: value,
+          startTime: selectedResource.availabilityStartTime?.slice(0, 5) || "",
+          endTime: selectedResource.availabilityEndTime?.slice(0, 5) || "",
+          attendees: selectedResource.capacity || ""
+        }));
+        return;
+      }
+    }
+    
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -72,20 +87,26 @@ export default function Userbookings() {
         return;
       }
 
-      await createBooking({
+      const bookingToCreate = {
         ...formData,
         attendees: parseInt(formData.attendees) || 0
-      });
+      };
+
+      await createBooking(bookingToCreate);
       
       setSuccessMessage("Booking request submitted successfully!");
       setShowModal(false);
       setFormData({ resourceId: "", bookingDate: "", startTime: "", endTime: "", purpose: "", attendees: "" });
-      await loadData();
+      
+      // Reload data in background
+      loadData();
       
       // Clear message after 3s
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to create booking.");
+      // Clear error after 5s
+      setTimeout(() => setError(""), 5000);
     }
   };
 
@@ -96,6 +117,8 @@ export default function Userbookings() {
       await loadData();
     } catch (err) {
       setError("Failed to cancel booking.");
+      // Clear error after 5s
+      setTimeout(() => setError(""), 5000);
     }
   };
 
@@ -248,6 +271,35 @@ export default function Userbookings() {
         >
           <div className="glass-card" style={{ maxWidth: "500px", width: '100%' }}>
             <h2>Request Booking</h2>
+            
+            {error && (
+              <div style={{ 
+                color: '#d93025', 
+                backgroundColor: '#fce8e6', 
+                padding: '12px', 
+                borderRadius: '8px', 
+                marginTop: '12px',
+                fontSize: '14px',
+                border: '1px solid #d93025'
+              }}>
+                {error}
+              </div>
+            )}
+            
+            {successMessage && (
+              <div style={{ 
+                color: '#1e7e34', 
+                backgroundColor: '#e6f4ea', 
+                padding: '12px', 
+                borderRadius: '8px', 
+                marginTop: '12px',
+                fontSize: '14px',
+                border: '1px solid #1e7e34'
+              }}>
+                {successMessage}
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "16px" }}>
               <div>
                 <label style={{ display: "block", marginBottom: "4px", fontSize: "14px", fontWeight: "600" }}>Resource</label>

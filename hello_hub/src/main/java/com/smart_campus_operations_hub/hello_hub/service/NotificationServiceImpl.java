@@ -31,8 +31,7 @@ public class NotificationServiceImpl implements NotificationService {
             String message,
             String relatedEntityId,
             String relatedEntityType,
-            String actionUrl
-    ) {
+            String actionUrl) {
         if (recipientEmail == null || recipientEmail.isBlank()) {
             return;
         }
@@ -70,8 +69,7 @@ public class NotificationServiceImpl implements NotificationService {
             String message,
             String relatedEntityId,
             String relatedEntityType,
-            String actionUrl
-    ) {
+            String actionUrl) {
         if (recipientEmails == null || recipientEmails.isEmpty()) {
             return;
         }
@@ -85,8 +83,7 @@ public class NotificationServiceImpl implements NotificationService {
                     message,
                     relatedEntityId,
                     relatedEntityType,
-                    actionUrl
-            );
+                    actionUrl);
         }
     }
 

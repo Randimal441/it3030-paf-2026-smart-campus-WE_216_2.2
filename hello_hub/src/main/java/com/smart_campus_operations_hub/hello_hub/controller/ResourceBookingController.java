@@ -40,13 +40,13 @@ public class ResourceBookingController {
 
     @PatchMapping("/{id}/status")
     public ResponseEntity<ResourceBookingResponseDTO> updateBookingStatus(
-            @PathVariable Long id,
+            @PathVariable String id,
             @RequestParam BookingStatus status) {
         return ResponseEntity.ok(resourceBookingService.updateBookingStatus(id, status));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteBooking(@PathVariable Long id, Authentication authentication) {
+    public ResponseEntity<Void> deleteBooking(@PathVariable String id, Authentication authentication) {
         resourceBookingService.deleteBooking(id, authentication);
         return ResponseEntity.noContent().build();
     }

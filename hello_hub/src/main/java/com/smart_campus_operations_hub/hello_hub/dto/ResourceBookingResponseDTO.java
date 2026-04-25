@@ -16,7 +16,7 @@ import java.time.LocalTime;
 @AllArgsConstructor
 public class ResourceBookingResponseDTO {
 
-    private Long id;
+    private String id;
     private Long resourceId;
     private String resourceName;
     private String requesterEmail;
