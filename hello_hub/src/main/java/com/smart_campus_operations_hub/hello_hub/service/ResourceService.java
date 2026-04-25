@@ -33,18 +33,17 @@ public class ResourceService {
         Resource savedResource = resourceRepository.save(resource);
 
         List<String> adminEmails = userService.getUsersByRole(UserRole.ADMIN).stream()
-            .map(AppUser::getEmail)
-            .toList();
+                .map(AppUser::getEmail)
+                .toList();
 
         notificationService.createNotificationForUsers(
-            adminEmails,
-            NotificationType.RESOURCE_CREATED,
-            "Resource Added",
-            "Resource " + savedResource.getName() + " was added.",
-            String.valueOf(savedResource.getId()),
-            "RESOURCE",
-            "/admin/resources"
-        );
+                adminEmails,
+                NotificationType.RESOURCE_CREATED,
+                "Resource Added",
+                "Resource " + savedResource.getName() + " was added.",
+                String.valueOf(savedResource.getId()),
+                "RESOURCE",
+                "/admin/resources");
 
         return mapToResponseDTO(savedResource);
     }
@@ -93,8 +92,7 @@ public class ResourceService {
             resources = resourceRepository.findByTypeAndLocationContainingIgnoreCaseAndCapacityGreaterThanEqual(
                     type,
                     normalizedLocation,
-                    capacity
-            );
+                    capacity);
         } else if (type != null && normalizedLocation != null) {
             resources = resourceRepository.findByTypeAndLocationContainingIgnoreCase(type, normalizedLocation);
         } else if (type != null && capacity != null) {
@@ -102,8 +100,7 @@ public class ResourceService {
         } else if (normalizedLocation != null && capacity != null) {
             resources = resourceRepository.findByLocationContainingIgnoreCaseAndCapacityGreaterThanEqual(
                     normalizedLocation,
-                    capacity
-            );
+                    capacity);
         } else if (type != null) {
             resources = resourceRepository.findByType(type);
         } else if (normalizedLocation != null) {

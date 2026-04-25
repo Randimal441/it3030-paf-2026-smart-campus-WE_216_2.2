@@ -1,0 +1,38 @@
+
+> smart-campus-frontend@1.0.0 dev
+> vite
+
+
+  VITE v5.4.21  ready in 170 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+11:18:11 AM [vite] hmr update /src/context/AuthContext.jsx, /src/pages/AdminDashboard.jsx, /src/pages/LoginPage.jsx, /src/pages/SignupPage.jsx, /src/pages/UserHome.jsx, /src/pages/Userbookings.jsx, /src/pages/AdminBookings.jsx, /src/pages/ResourceList.jsx, /src/pages/ResourceForm.jsx, /src/pages/RoleSelectionPage.jsx, /src/pages/UserTickets.jsx, /src/pages/AdminTicket.jsx, /src/pages/TechnianTickets.jsx, /src/components/NotificationCenter.jsx, /src/components/NotificationBell.jsx, /src/components/RaiseTicketModal.jsx
+11:18:11 AM [vite] hmr update /src/components/AdminNavbar.jsx
+11:18:11 AM [vite] hmr update /src/components/NotificationCenter.jsx
+11:18:11 AM [vite] hmr update /src/components/RaiseTicketModal.jsx
+11:18:11 AM [vite] hmr update /src/components/TechnicianNavbar.jsx
+11:18:11 AM [vite] hmr update /src/components/UserNavbar.jsx
+11:18:11 AM [vite] hmr update /src/pages/AdminDashboard.jsx
+11:18:11 AM [vite] hmr update /src/pages/AdminNotification.jsx
+11:18:11 AM [vite] hmr update /src/pages/LoginPage.jsx
+11:18:11 AM [vite] hmr update /src/pages/ResourceList.jsx
+11:18:11 AM [vite] hmr update /src/pages/RoleSelectionPage.jsx
+11:18:11 AM [vite] hmr update /src/pages/SignupPage.jsx
+11:18:11 AM [vite] hmr update /src/pages/UserHome.jsx
+11:18:11 AM [vite] hmr update /src/pages/UserNotifications.jsx
+11:18:11 AM [vite] hmr update /src/router/AppRouter.jsx
+11:18:11 AM [vite] hmr update /src/styles.css
+11:18:11 AM [vite] hmr update /src/context/AuthContext.jsx, /src/pages/AdminDashboard.jsx, /src/pages/LoginPage.jsx, /src/pages/SignupPage.jsx, /src/pages/UserHome.jsx, /src/pages/Userbookings.jsx, /src/pages/AdminBookings.jsx, /src/pages/ResourceList.jsx, /src/pages/ResourceForm.jsx, /src/pages/RoleSelectionPage.jsx, /src/pages/UserTickets.jsx, /src/pages/AdminTicket.jsx, /src/pages/TechnianTickets.jsx, /src/components/NotificationCenter.jsx, /src/components/NotificationBell.jsx, /src/components/RaiseTicketModal.jsx
+11:18:11 AM [vite] hmr update /src/components/AdminNavbar.jsx
+11:18:11 AM [vite] hmr update /src/components/NotificationCenter.jsx
+11:18:11 AM [vite] hmr update /src/components/RaiseTicketModal.jsx
+11:18:11 AM [vite] hmr update /src/components/TechnicianNavbar.jsx
+11:18:11 AM [vite] hmr update /src/components/UserNavbar.jsx
+11:18:11 AM [vite] hmr update /src/pages/AdminDashboard.jsx
+11:18:11 AM [vite] hmr update /src/pages/AdminNotification.jsx
+11:18:11 AM [vite] hmr update /src/pages/LoginPage.jsx
+11:18:11 AM [vite] hmr update /src/pages/ResourceList.jsx
+11:18:11 AM [vite] hmr update /src/pages/RoleSelectionPage.jsx
+11:18:11 AM [vite] hmr update /src/pages/SignupPage.jsx
+11:18:11 AM [vite] hmr update /src/pages/UserHome.jsx

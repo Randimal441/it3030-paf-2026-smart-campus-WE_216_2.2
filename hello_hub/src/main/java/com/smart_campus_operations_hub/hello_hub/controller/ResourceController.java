@@ -47,14 +47,13 @@ public class ResourceController {
     public ResponseEntity<List<ResourceResponseDTO>> searchResources(
             @RequestParam(required = false) ResourceType type,
             @RequestParam(required = false) String location,
-            @RequestParam(required = false) Integer capacity
-    ) {
+            @RequestParam(required = false) Integer capacity) {
         return ResponseEntity.ok(resourceService.searchResources(type, location, capacity));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<ResourceResponseDTO> updateResource(@PathVariable Long id,
-                                                              @Valid @RequestBody ResourceRequestDTO dto) {
+            @Valid @RequestBody ResourceRequestDTO dto) {
         return ResponseEntity.ok(resourceService.updateResource(id, dto));
     }
 

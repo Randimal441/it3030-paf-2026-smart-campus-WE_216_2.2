@@ -26,185 +26,188 @@ import java.time.LocalTime;
 @RequiredArgsConstructor
 public class ResourceBookingService {
 
-    private final ResourceRepository resourceRepository;
-    private final ResourceBookingRepository resourceBookingRepository;
-    private final UserService userService;
-    private final NotificationService notificationService;
+        private final ResourceRepository resourceRepository;
+        private final ResourceBookingRepository resourceBookingRepository;
+        private final UserService userService;
+        private final NotificationService notificationService;
 
-    public ResourceBookingResponseDTO createBooking(Authentication authentication, ResourceBookingRequestDTO dto) {
-        Resource resource = resourceRepository.findById(dto.getResourceId())
-                .orElseThrow(() -> new ResourceNotFoundException("Resource not found: " + dto.getResourceId()));
+        public ResourceBookingResponseDTO createBooking(Authentication authentication, ResourceBookingRequestDTO dto) {
+                Resource resource = resourceRepository.findById(dto.getResourceId())
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Resource not found: " + dto.getResourceId()));
 
-        if (resource.getStatus() != ResourceStatus.ACTIVE) {
-            throw new BadRequestException("Only ACTIVE resources can be booked.");
+                if (resource.getStatus() != ResourceStatus.ACTIVE) {
+                        throw new BadRequestException("Only ACTIVE resources can be booked.");
+                }
+
+                if (!dto.getStartTime().isBefore(dto.getEndTime())) {
+                        throw new BadRequestException("Start time must be before end time.");
+                }
+
+                if (dto.getStartTime().isBefore(resource.getAvailabilityStartTime())
+                                || dto.getEndTime().isAfter(resource.getAvailabilityEndTime())) {
+                        throw new BadRequestException("Requested time is outside resource availability window.");
+                }
+
+                // Check for overlapping APPROVED bookings
+                List<ResourceBooking> overlaps = resourceBookingRepository.findOverlappingBookings(
+                                resource.getId(),
+                                dto.getBookingDate(),
+                                dto.getStartTime(),
+                                dto.getEndTime());
+
+                if (!overlaps.isEmpty()) {
+                        throw new BadRequestException(
+                                        "The requested time slot is already booked and approved by another user.");
+                }
+
+                ResourceBooking booking = ResourceBooking.builder()
+                                .resourceId(resource.getId())
+                                .resourceName(resource.getName())
+                                .requesterEmail(authentication.getName())
+                                .requesterRole(authentication.getAuthorities().stream()
+                                                .findFirst()
+                                                .map(a -> a.getAuthority())
+                                                .orElse("ROLE_STUDENT"))
+                                .bookingDate(dto.getBookingDate())
+                                .startTime(dto.getStartTime())
+                                .endTime(dto.getEndTime())
+                                .purpose(dto.getPurpose().trim())
+                                .attendees(dto.getAttendees())
+                                .status(BookingStatus.PENDING)
+                                .build();
+
+                ResourceBooking saved = resourceBookingRepository.save(booking);
+
+                List<String> adminEmails = userService.getUsersByRole(UserRole.ADMIN).stream()
+                                .map(AppUser::getEmail)
+                                .collect(Collectors.toList());
+
+                notificationService.createNotificationForUsers(
+                                adminEmails,
+                                NotificationType.BOOKING_CREATED,
+                                "New Booking Request",
+                                booking.getRequesterEmail() + " requested " + booking.getResourceName(),
+                                String.valueOf(saved.getId()),
+                                "BOOKING",
+                                "/admin/bookings");
+
+                String requesterPath = resolveBookingPathForRequester(booking.getRequesterEmail());
+                notificationService.createNotificationForUser(
+                                booking.getRequesterEmail(),
+                                NotificationType.BOOKING_CREATED,
+                                "Booking Submitted",
+                                "Your booking request for " + booking.getResourceName() + " is pending review.",
+                                String.valueOf(saved.getId()),
+                                "BOOKING",
+                                requesterPath);
+
+                return mapToResponse(saved);
         }
 
-        if (!dto.getStartTime().isBefore(dto.getEndTime())) {
-            throw new BadRequestException("Start time must be before end time.");
+        public List<ResourceBookingResponseDTO> getAllBookings() {
+                return resourceBookingRepository.findAll().stream()
+                                .map(this::mapToResponse)
+                                .collect(Collectors.toList());
         }
 
-        if (dto.getStartTime().isBefore(resource.getAvailabilityStartTime())
-                || dto.getEndTime().isAfter(resource.getAvailabilityEndTime())) {
-            throw new BadRequestException("Requested time is outside resource availability window.");
+        public List<ResourceBookingResponseDTO> getBookingsByRequester(String email) {
+                return resourceBookingRepository.findByRequesterEmail(email).stream()
+                                .map(this::mapToResponse)
+                                .collect(Collectors.toList());
         }
 
-        // Check for overlapping APPROVED bookings
-        List<ResourceBooking> overlaps = resourceBookingRepository.findOverlappingBookings(
-                resource.getId(),
-                dto.getBookingDate(),
-                dto.getStartTime(),
-                dto.getEndTime()
-        );
+        public ResourceBookingResponseDTO updateBookingStatus(String id, BookingStatus newStatus) {
+                ResourceBooking booking = resourceBookingRepository.findById(id)
+                                .orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + id));
 
-        if (!overlaps.isEmpty()) {
-            throw new BadRequestException("The requested time slot is already booked and approved by another user.");
+                BookingStatus oldStatus = booking.getStatus();
+                booking.setStatus(newStatus);
+                ResourceBooking saved = resourceBookingRepository.save(booking);
+
+                NotificationType type = switch (newStatus) {
+                        case APPROVED -> NotificationType.BOOKING_APPROVED;
+                        case REJECTED -> NotificationType.BOOKING_REJECTED;
+                        case CANCELLED -> NotificationType.BOOKING_CANCELLED;
+                        default -> NotificationType.BOOKING_CREATED;
+                };
+
+                String requesterPath = resolveBookingPathForRequester(saved.getRequesterEmail());
+                notificationService.createNotificationForUser(
+                                saved.getRequesterEmail(),
+                                type,
+                                "Booking " + newStatus.name(),
+                                "Your booking for " + saved.getResourceName() + " was marked as " + newStatus.name()
+                                                + ".",
+                                String.valueOf(saved.getId()),
+                                "BOOKING",
+                                requesterPath);
+
+                return mapToResponse(saved);
         }
 
-        ResourceBooking booking = ResourceBooking.builder()
-                .resourceId(resource.getId())
-                .resourceName(resource.getName())
-                .requesterEmail(authentication.getName())
-                .requesterRole(authentication.getAuthorities().stream()
-                        .findFirst()
-                        .map(a -> a.getAuthority())
-                        .orElse("ROLE_STUDENT"))
-                .bookingDate(dto.getBookingDate())
-                .startTime(dto.getStartTime())
-                .endTime(dto.getEndTime())
-                .purpose(dto.getPurpose().trim())
-                .attendees(dto.getAttendees())
-                .status(BookingStatus.PENDING)
-                .build();
+        @org.springframework.transaction.annotation.Transactional
+        public void deleteBooking(String id, Authentication authentication) {
+                ResourceBooking booking = resourceBookingRepository.findById(id)
+                                .orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + id));
 
-        ResourceBooking saved = resourceBookingRepository.save(booking);
+                // Only the requester or an admin can delete/cancel a booking
+                boolean isAdmin = authentication.getAuthorities().stream()
+                                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
-        List<String> adminEmails = userService.getUsersByRole(UserRole.ADMIN).stream()
-            .map(AppUser::getEmail)
-            .collect(Collectors.toList());
+                if (!isAdmin && !booking.getRequesterEmail().equals(authentication.getName())) {
+                        throw new BadRequestException("You are not authorized to cancel this booking.");
+                }
 
-        notificationService.createNotificationForUsers(
-            adminEmails,
-            NotificationType.BOOKING_CREATED,
-            "New Booking Request",
-            booking.getRequesterEmail() + " requested " + booking.getResourceName(),
-            String.valueOf(saved.getId()),
-            "BOOKING",
-            "/admin/bookings"
-        );
+                // Capture data before deletion
+                String requesterEmail = booking.getRequesterEmail();
+                String resourceName = booking.getResourceName();
+                String bookingIdStr = String.valueOf(booking.getId());
 
-        String requesterPath = resolveBookingPathForRequester(booking.getRequesterEmail());
-        notificationService.createNotificationForUser(
-            booking.getRequesterEmail(),
-            NotificationType.BOOKING_CREATED,
-            "Booking Submitted",
-            "Your booking request for " + booking.getResourceName() + " is pending review.",
-            String.valueOf(saved.getId()),
-            "BOOKING",
-            requesterPath
-        );
+                resourceBookingRepository.delete(booking);
 
-        return mapToResponse(saved);
-    }
+                notificationService.createNotificationForUser(
+                                requesterEmail,
+                                NotificationType.BOOKING_CANCELLED,
+                                "Booking Cancelled",
+                                "Booking for " + resourceName + " has been cancelled.",
+                                bookingIdStr,
+                                "BOOKING",
+                                resolveBookingPathForRequester(requesterEmail));
 
-    public List<ResourceBookingResponseDTO> getAllBookings() {
-        return resourceBookingRepository.findAll().stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
-    }
+                List<String> adminEmails = userService.getUsersByRole(UserRole.ADMIN).stream()
+                                .map(AppUser::getEmail)
+                                .collect(Collectors.toList());
 
-    public List<ResourceBookingResponseDTO> getBookingsByRequester(String email) {
-        return resourceBookingRepository.findByRequesterEmail(email).stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
-    }
-
-    public ResourceBookingResponseDTO updateBookingStatus(Long id, BookingStatus newStatus) {
-        ResourceBooking booking = resourceBookingRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + id));
-        
-        BookingStatus oldStatus = booking.getStatus();
-        booking.setStatus(newStatus);
-        ResourceBooking saved = resourceBookingRepository.save(booking);
-
-        NotificationType type = switch (newStatus) {
-            case APPROVED -> NotificationType.BOOKING_APPROVED;
-            case REJECTED -> NotificationType.BOOKING_REJECTED;
-            case CANCELLED -> NotificationType.BOOKING_CANCELLED;
-            default -> NotificationType.BOOKING_CREATED;
-        };
-
-        String requesterPath = resolveBookingPathForRequester(saved.getRequesterEmail());
-        notificationService.createNotificationForUser(
-                saved.getRequesterEmail(),
-                type,
-                "Booking " + newStatus.name(),
-                "Your booking for " + saved.getResourceName() + " was marked as " + newStatus.name() + ".",
-                String.valueOf(saved.getId()),
-                "BOOKING",
-                requesterPath
-        );
-
-        return mapToResponse(saved);
-    }
-
-    public void deleteBooking(Long id, Authentication authentication) {
-        ResourceBooking booking = resourceBookingRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + id));
-        
-        // Only the requester or an admin can delete/cancel a booking
-        boolean isAdmin = authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-        
-        if (!isAdmin && !booking.getRequesterEmail().equals(authentication.getName())) {
-            throw new BadRequestException("You are not authorized to cancel this booking.");
+                notificationService.createNotificationForUsers(
+                                adminEmails,
+                                NotificationType.BOOKING_CANCELLED,
+                                "Booking Cancelled",
+                                requesterEmail + " cancelled booking for " + resourceName,
+                                bookingIdStr,
+                                "BOOKING",
+                                "/admin/bookings");
         }
 
-        resourceBookingRepository.delete(booking);
+        private ResourceBookingResponseDTO mapToResponse(ResourceBooking booking) {
+                return ResourceBookingResponseDTO.builder()
+                                .id(booking.getId())
+                                .resourceId(booking.getResourceId())
+                                .resourceName(booking.getResourceName())
+                                .requesterEmail(booking.getRequesterEmail())
+                                .requesterRole(booking.getRequesterRole())
+                                .bookingDate(booking.getBookingDate())
+                                .startTime(booking.getStartTime())
+                                .endTime(booking.getEndTime())
+                                .purpose(booking.getPurpose())
+                                .attendees(booking.getAttendees())
+                                .status(booking.getStatus())
+                                .createdAt(booking.getCreatedAt())
+                                .build();
+        }
 
-        notificationService.createNotificationForUser(
-            booking.getRequesterEmail(),
-            NotificationType.BOOKING_CANCELLED,
-            "Booking Cancelled",
-            "Booking for " + booking.getResourceName() + " has been cancelled.",
-            String.valueOf(booking.getId()),
-            "BOOKING",
-            resolveBookingPathForRequester(booking.getRequesterEmail())
-        );
-
-        List<String> adminEmails = userService.getUsersByRole(UserRole.ADMIN).stream()
-            .map(AppUser::getEmail)
-            .collect(Collectors.toList());
-
-        notificationService.createNotificationForUsers(
-            adminEmails,
-            NotificationType.BOOKING_CANCELLED,
-            "Booking Cancelled",
-            booking.getRequesterEmail() + " cancelled booking for " + booking.getResourceName(),
-            String.valueOf(booking.getId()),
-            "BOOKING",
-            "/admin/bookings"
-        );
-    }
-
-    private ResourceBookingResponseDTO mapToResponse(ResourceBooking booking) {
-        return ResourceBookingResponseDTO.builder()
-                .id(booking.getId())
-                .resourceId(booking.getResourceId())
-                .resourceName(booking.getResourceName())
-                .requesterEmail(booking.getRequesterEmail())
-                .requesterRole(booking.getRequesterRole())
-                .bookingDate(booking.getBookingDate())
-                .startTime(booking.getStartTime())
-                .endTime(booking.getEndTime())
-                .purpose(booking.getPurpose())
-                .attendees(booking.getAttendees())
-                .status(booking.getStatus())
-                .createdAt(booking.getCreatedAt())
-                .build();
-    }
-
-    private String resolveBookingPathForRequester(String requesterEmail) {
-        AppUser requester = userService.getByEmail(requesterEmail);
-        return requester.getRole() == UserRole.LECTURER ? "/lecturer/bookings" : "/student/bookings";
-    }
+        private String resolveBookingPathForRequester(String requesterEmail) {
+                AppUser requester = userService.getByEmail(requesterEmail);
+                return requester.getRole() == UserRole.LECTURER ? "/lecturer/bookings" : "/student/bookings";
+        }
 }
